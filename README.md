@@ -12,7 +12,7 @@ IndexTTS 2 免费云原生项目：
 
 https://cnb.cool/ConyStudio/index-tts-v2
 
-启动后在前端输入云原生项目的Ip地址即可调用
+启动后在前端输入云原生项目的Ip地址即可调用。
 
 LLM可以使用Gemini，
 
