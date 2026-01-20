@@ -20,7 +20,7 @@
             <div class="text-[10px] text-slate-300">v2.2</div>
         </header>
         
-        <!-- 标签页导航 -->
+
         <div class="flex border-b border-slate-200 mb-6">
             <button @click="activeTab = 'config'" :class="['px-6 py-3 text-sm font-bold transition-colors', activeTab === 'config' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700']">
                 模型配置
@@ -39,10 +39,10 @@
             </button>
         </div>
 
-        <!-- 页面 1: 模型配置 (LLM & TTS) -->
+
         <div v-if="activeTab === 'config'" class="space-y-6">
             <h2 class="text-lg font-bold text-slate-800 border-b pb-2">LLM 模型配置</h2>
-            <!-- 添加/编辑表单 -->
+
             <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
                 <h3 class="text-sm font-bold text-slate-700 mb-4">{{ isEditing ? '编辑配置' : '添加新配置' }}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -69,7 +69,7 @@
                 </div>
             </div>
 
-            <!-- 配置列表 -->
+ 
             <div class="grid gap-3">
                 <div v-for="conf in llmConfigs" :key="conf.id" class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:shadow-sm transition-shadow">
                     <div>
@@ -87,7 +87,7 @@
             </div>
             
             <h2 class="text-lg font-bold text-slate-800 border-b pb-2 pt-6">TTS 语音合成配置</h2>
-            <!-- 添加/编辑表单 -->
+
             <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
                 <h3 class="text-sm font-bold text-slate-700 mb-4">{{ isEditingTts ? '编辑 TTS 配置' : '添加新 TTS 配置' }}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -106,7 +106,7 @@
                 </div>
             </div>
 
-            <!-- 配置列表 -->
+
             <div class="grid gap-3">
                 <div v-for="conf in ttsConfigs" :key="conf.id" class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:shadow-sm transition-shadow">
                     <div>
@@ -124,12 +124,12 @@
             </div>
         </div>
 
-        <!-- 页面 4: 音色资源库 -->
+
         <div v-if="activeTab === 'timbres'" class="space-y-8">
-            <!-- 音色管理区域 -->
+
             <section class="space-y-6">
             <h2 class="text-lg font-bold text-slate-800 border-b pb-2">音色管理</h2>
-            <!-- 添加/编辑表单 -->
+
             <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
                 <h3 class="text-sm font-bold text-slate-700 mb-4">{{ isEditingTimbre ? '编辑音色' : '添加新音色' }}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -166,7 +166,7 @@
                 </div>
             </div>
 
-            <!-- 音色列表 -->
+
             <div class="grid gap-3">
                 <div v-for="timbre in timbres" :key="timbre.id" class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:shadow-sm transition-shadow">
                     <div class="flex items-center gap-3">
@@ -190,10 +190,10 @@
             </div>
             </section>
 
-            <!-- 情绪向量预设区域 -->
+
             <section class="space-y-6">
             <h2 class="text-lg font-bold text-slate-800 border-b pb-2">情绪描述预设</h2>
-            <!-- 添加/编辑情绪表单 -->
+
             <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
                 <h3 class="text-sm font-bold text-slate-700 mb-4">{{ isEditingEmotion ? '编辑情绪预设' : '添加新情绪预设' }}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -213,7 +213,7 @@
                 </div>
             </div>
 
-            <!-- 情绪列表 -->
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div v-for="emo in emotionPresets" :key="emo.id" class="p-3 bg-white border border-slate-200 rounded-xl hover:shadow-sm transition-shadow flex justify-between items-center">
                     <div>
@@ -229,7 +229,7 @@
             </section>
         </div>
 
-        <!-- 页面 6: 音效素材库 -->
+
         <div v-if="activeTab === 'sfx'" class="space-y-8">
             <section class="space-y-6">
                 <h2 class="text-lg font-bold text-slate-800 border-b pb-2">音效素材管理</h2>
@@ -251,7 +251,7 @@
                                 <button type="button" @click="$refs.sfxFileRef.click()" class="whitespace-nowrap px-3 py-2 bg-slate-100 border border-slate-300 text-slate-600 rounded-lg text-xs hover:bg-slate-200 transition-colors">选择文件</button>
                                 <input v-model="sfxForm.filename" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如: door_slam.wav">
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-1">提示：仅保存文件引用，不进行上传。请确保服务端存在同名文件。</p>
+                            <p class="text-[10px] text-slate-400 mt-1"></p>
                         </div>
                     </div>
                     <div class="flex gap-2">
@@ -299,7 +299,7 @@
                                 <button type="button" @click="$refs.bgmFileRef.click()" class="whitespace-nowrap px-3 py-2 bg-slate-100 border border-slate-300 text-slate-600 rounded-lg text-xs hover:bg-slate-200 transition-colors">选择文件</button>
                                 <input v-model="bgmForm.filename" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如: sad_piano.mp3">
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-1">提示：仅保存文件引用，不进行上传。请确保服务端存在同名文件。</p>
+                            <p class="text-[10px] text-slate-400 mt-1"></p>
                         </div>
                     </div>
                     <div class="flex gap-2">
@@ -388,10 +388,10 @@
             </section>
         </div>
 
-        <!-- 页面 5: 脚本制作 (重构：左右分栏) -->
+
         <div v-if="activeTab === 'script'" class="flex flex-col lg:flex-row gap-6 items-start">
             
-            <!-- 左侧：角色与音色绑定栏 -->
+
             <div class="w-full lg:w-80 flex-shrink-0 space-y-4">
                 <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
                     <h3 class="text-sm font-bold text-slate-700 mb-3 flex justify-between items-center">
@@ -420,11 +420,11 @@
                 </div>
             </div>
 
-            <!-- 原文输入区域 -->
+
             <div class="flex-1 w-full space-y-6 min-w-0">
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-bold text-slate-700">1. 输入原文 / 小说片段</h3>
+                    <h3 class="text-sm font-bold text-slate-700">1. 输入小说片段</h3>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
@@ -473,7 +473,7 @@
                 </div>
             </div>
 
-            <!-- 拆分结果列表 -->
+
             <div v-if="scriptLines.length > 0" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-bold text-slate-700">2. 脚本台词列表 ({{ scriptLines.length }} 行)</h3>
@@ -481,7 +481,7 @@
                 <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 pb-10">
                     <div v-for="(line, index) in scriptLines" :key="line.id" @click="selectedLineIndex = index" class="transition-all duration-200">
                         
-                        <!-- BGM 控制块 -->
+
                         <div v-if="line.type === 'bgm'" :class="['flex items-center gap-3 p-3 rounded-lg border mb-2 transition-all', selectedLineIndex === index ? 'border-purple-500 bg-purple-50 shadow-md' : 'bg-purple-50/50 border-purple-200', currentSequenceIndex === index ? 'ring-2 ring-green-500' : '']">
                             <div class="flex flex-col items-center justify-center gap-1 w-8 flex-shrink-0 border-r border-purple-200 pr-2">
                                 <button @click.stop="moveLineUp(index)" class="text-purple-400 hover:text-purple-700 p-0.5 hover:bg-purple-100 rounded" title="上移">▲</button>
@@ -509,7 +509,7 @@
                             <button @click="removeScriptLine(index)" class="text-slate-300 hover:text-red-500 p-2"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
                         </div>
 
-                        <!-- 台词块 -->
+
                         <div v-else :class="['flex items-stretch gap-3 p-3 rounded-lg mb-2 transition-all group cursor-pointer', selectedLineIndex === index ? 'bg-blue-50 shadow-sm' : 'bg-white hover:bg-slate-50', currentSequenceIndex === index ? 'ring-2 ring-green-500' : '']">
                         <div class="flex flex-col items-center justify-center gap-1 w-8 flex-shrink-0 border-r border-slate-100 pr-2">
                             <button @click.stop="moveLineUp(index)" class="text-slate-400 hover:text-blue-600 p-0.5 hover:bg-slate-100 rounded" title="上移">▲</button>
@@ -517,19 +517,19 @@
                             <button @click.stop="moveLineDown(index)" class="text-slate-400 hover:text-blue-600 p-0.5 hover:bg-slate-100 rounded" title="下移">▼</button>
                         </div>
                         
-                        <!-- 角色选择 -->
+ 
                         <div class="w-24 flex-shrink-0 flex flex-col justify-center gap-1">
                             <select v-model="line.role" class="w-full px-2 py-1.5 text-xs border rounded bg-white focus:ring-1 focus:ring-blue-500 outline-none font-bold text-slate-700">
                                 <option v-for="roleName in availableRoles" :key="roleName" :value="roleName">{{ roleName }}</option>
                             </select>
-                            <!-- 滤波器选择 -->
+
                             <select v-model="line.filter" class="w-full px-2 py-1 text-[10px] border rounded bg-slate-50 focus:ring-1 focus:ring-blue-500 outline-none text-slate-500" title="音频滤波器">
                                 <option value="">无滤波器</option>
                                 <option v-for="f in filterLibrary" :key="f.id" :value="f.name">{{ f.name }}</option>
                             </select>
                         </div>
 
-                        <!-- 情绪描述 -->
+
                         <div class="w-36 flex-shrink-0 space-y-1 flex flex-col justify-center">
                             <select :value="getEmotionSelectValue(line)" @change="applyPresetToLine(line, $event)" class="w-full px-2 py-1.5 text-xs border rounded bg-white focus:ring-1 focus:ring-blue-500 outline-none text-slate-600">
                                 <option value="">AI生成</option>
@@ -539,13 +539,13 @@
                             <input v-model="line.emotion_text" class="w-full px-2 py-1 text-xs border rounded bg-white focus:ring-1 focus:ring-blue-500 outline-none text-slate-700" placeholder="情绪描述文本">
                         </div>
 
-                        <!-- 停顿间隔 -->
+
                         <div class="w-16 flex-shrink-0 space-y-1 flex flex-col justify-center">
                             <div class="text-[10px] font-bold text-slate-400 uppercase text-center leading-tight">停顿(s)</div>
                             <input type="number" v-model="line.break_duration" step="0.1" min="0" class="w-full px-1 py-1.5 text-xs border rounded bg-white focus:ring-1 focus:ring-blue-500 outline-none text-center font-mono text-slate-600" placeholder="0">
                         </div>
 
-                        <!-- 音量控制 (纵向排列) -->
+
                         <div class="w-32 flex-shrink-0 flex flex-col justify-center gap-2 px-2 border-l border-slate-100">
                             <div class="w-full">
                                 <div class="flex justify-between items-center mb-0.5">
@@ -563,11 +563,11 @@
                             </div>
                         </div>
 
-                        <!-- 文本与音效区域 -->
+
                         <div class="flex-1 flex flex-col gap-2 min-w-0">
                             <textarea v-model="line.text" rows="2" class="w-full h-full bg-transparent border-none focus:ring-0 text-sm text-slate-700 resize-none leading-relaxed py-1.5" @input="autoResizeTextarea($event)"></textarea>
                             
-                            <!-- 音效管理条 -->
+
                             <div class="flex flex-wrap items-center gap-2">
                                 <div v-for="(sfx, sIdx) in line.sfx" :key="sIdx" class="flex items-center bg-blue-50 border border-blue-100 rounded px-2 py-1 text-xs">
                                     <span class="mr-1"></span>
@@ -582,7 +582,7 @@
                             </div>
                         </div>
                         
-                        <!-- 按钮组 -->
+
                         <div class="flex items-center gap-1">
                             <button @click.stop="generateLineAudio(line)" :disabled="line.isGenerating" title="生成音频" class="text-slate-400 hover:text-indigo-600 disabled:text-slate-300 disabled:cursor-wait p-2">
                                 <svg v-if="line.isGenerating" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -601,7 +601,7 @@
                 </div>
             </div>
 
-            <!-- 调试：显示原始 JSON -->
+
             <div v-if="rawAnalysisResult" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <h3 class="text-sm font-bold text-slate-700 mb-2">3. AI 原始输出 (调试用)</h3>
                 <pre class="bg-slate-800 text-slate-200 p-4 rounded-lg text-xs overflow-x-auto whitespace-pre-wrap max-h-64">{{ rawAnalysisResult }}</pre>
@@ -609,7 +609,7 @@
             </div>
         </div>
 
-        <!-- 页面 7: Prompt 管理 -->
+
         <div v-if="activeTab === 'prompt'" class="space-y-6">
             <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
                 <div class="flex justify-between items-center mb-4">
@@ -643,7 +643,7 @@
 
         createApp({
             setup() {
-                // 状态
+
                 const activeTab = ref('script');
                 
                 watch(activeTab, (newValue) => {
@@ -652,46 +652,46 @@
                 const llmConfigs = ref([]);
                 const currentConfigId = ref('');
                 
-                // 表单状态
+
                 const form = ref({ id: '', name: '', baseUrl: '', model: '', key: '' });
                 const isEditing = ref(false);
 
-                // TTS 配置状态
+
                 const ttsConfigs = ref([]);
                 const ttsForm = ref({ id: '', name: '', baseUrl: '' });
                 const isEditingTts = ref(false);
 
-                // 角色库状态
+
                 const characters = ref([]);
 
-                // 音色库状态
+
                 const timbres = ref([]);
                 const timbreForm = ref({ id: '', name: '', description: '', refPath: '' });
                 const isEditingTimbre = ref(false);
                 const selectedTimbreId = ref('');
-                const timbreFile = ref(null); // ADDED: To store the selected timbre file object
+                const timbreFile = ref(null); 
 
-                // 情绪预设状态
+
                 const emotionPresets = ref([]);
                 const emotionForm = ref({ id: '', name: '', text: '' });
                 const isEditingEmotion = ref(false);
 
-                // 音效库状态
+
                 const sfxLibrary = ref([]);
                 const sfxForm = ref({ id: '', name: '', description: '', filename: '' });
                 const isEditingSfx = ref(false);
 
-                // BGM库状态
+
                 const bgmLibrary = ref([]);
                 const bgmForm = ref({ id: '', name: '', description: '', filename: '' });
                 const isEditingBgm = ref(false);
 
-                // 滤波器库状态
+
                 const filterLibrary = ref([]);
                 const filterForm = ref({ id: '', name: '', description: '', type: 'lowpass', frequency: 1000, Q: 1, gain: 0 });
                 const isEditingFilter = ref(false);
 
-                // 聊天状态
+
                 const prompt = ref('');
                 const result = ref('');
                 const reasoning = ref('');
@@ -699,17 +699,17 @@
                 const loading = ref(false);
                 const abortController = ref(null);
 
-                // TTS 状态
+
                 const currentTtsConfigId = ref('');
                 const ttsRefFile = ref(null);
-                const ttsRefPath = ref('uploaded/ref.wav'); // 默认路径示例
+                const ttsRefPath = ref('uploaded/ref.wav'); 
                 const ttsEmoText = ref('中立');
                 const audioUrl = ref('');
                 const ttsLoading = ref(false);
                 const ttsError = ref('');
                 const ttsAbortController = ref(null);
 
-                // 脚本制作状态
+
                 const rawScript = ref('');
                 const scriptLines = ref([]);
                 const isAnalyzingScript = ref(false);
@@ -725,12 +725,12 @@
                 let bgmAudioNode = null;
                 let bgmGainNode = null;
 
-                // 计算当前选中的配置
+
                 const currentConfig = computed(() => {
                     return llmConfigs.value.find(c => c.id === currentConfigId.value) || null;
                 });
 
-                // Prompt Template
+
                 const defaultPromptTemplate = `你的任务是将给定小说内容拆分为台词和旁白，并自动识别每一句台词的角色和情绪。
 **注意：生成的结果将直接用于 IndexTTS 语音合成系统，请确保情绪描述精准且符合语音合成的提示规范。**
 
@@ -825,7 +825,7 @@
                 const customPromptTemplate = ref(defaultPromptTemplate);
                 const useCustomPrompt = ref(false);
 
-                // --- 音频引擎与缓存 (Audio Engine & Cache) ---
+
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const audioBufferCache = new Map();
 
@@ -857,7 +857,7 @@
                     console.log('音频素材预加载完成');
                 };
 
-                // 读取持久化配置
+
                 onMounted(async () => {
                     const savedTab = localStorage.getItem('storyforge_activeTab');
                     if (savedTab) {
@@ -868,7 +868,7 @@
                     if (savedList) {
                         llmConfigs.value = JSON.parse(savedList);
                     } else {
-                        // 迁移旧数据或初始化默认
+
                         const oldSingle = localStorage.getItem('storyforge_universal_v2');
                         if (oldSingle) {
                             const c = JSON.parse(oldSingle);
@@ -877,39 +877,39 @@
                         }
                     }
                     
-                    // 默认选中第一个
+
                     if (llmConfigs.value.length > 0) {
                         currentConfigId.value = llmConfigs.value[0].id;
                     } else {
-                        activeTab.value = 'config'; // 没配置时跳到管理页
+                        activeTab.value = 'config';
                     }
 
-                    // 读取 TTS 配置
+
                     const savedTts = localStorage.getItem('storyforge_tts_configs');
                     if (savedTts) ttsConfigs.value = JSON.parse(savedTts);
                     if (ttsConfigs.value.length > 0) currentTtsConfigId.value = ttsConfigs.value[0].id;
 
 
-                    // 读取音色库
+
                     const savedTimbres = localStorage.getItem('storyforge_timbres');
                     if (savedTimbres) {
                         timbres.value = JSON.parse(savedTimbres);
                     }
 
-                    // 读取音效库
+
                     const savedSfx = localStorage.getItem('storyforge_sfx');
                     if (savedSfx) sfxLibrary.value = JSON.parse(savedSfx).map(i => ({ ...i, enabled: i.enabled !== false }));
 
-                    // 读取BGM库
+
                     const savedBgm = localStorage.getItem('storyforge_bgm');
                     if (savedBgm) bgmLibrary.value = JSON.parse(savedBgm).map(i => ({ ...i, enabled: i.enabled !== false }));
 
-                    // 读取滤镜库
+
                     const savedFilters = localStorage.getItem('storyforge_filters');
                     if (savedFilters) {
                         filterLibrary.value = JSON.parse(savedFilters).map(i => ({ ...i, enabled: i.enabled !== false }));
                     } else {
-                        // 默认滤波器预设
+
                         filterLibrary.value = [
                             { id: 'f1', name: '电话音', description: '模拟电话通话时的窄频带声音', type: 'bandpass', frequency: 1700, Q: 1.5, gain: 0, enabled: true },
                             { id: 'f2', name: '水下', description: '模拟在水下听到的闷声', type: 'lowpass', frequency: 400, Q: 1, gain: 0, enabled: true },
@@ -918,13 +918,13 @@
                         ];
                     }
 
-                    // 读取情绪预设
+
                     const savedEmotions = localStorage.getItem('storyforge_emotions');
                     let loadedEmotions = [];
                     if (savedEmotions) {
                         try {
                             loadedEmotions = JSON.parse(savedEmotions);
-                            // 检查数据格式是否为旧版 (无 text 字段)，如果是则强制使用默认
+
                             if (loadedEmotions.length > 0 && !loadedEmotions[0].text) loadedEmotions = [];
                         } catch(e) { loadedEmotions = []; }
                     }
@@ -932,8 +932,7 @@
                     if (loadedEmotions.length > 0) {
                         emotionPresets.value = loadedEmotions;
                     } else {
-                        // 默认情绪 (修正版)
-                        // 改为文本描述
+
                         emotionPresets.value = [
                             { id: '1', name: '中立',    text: '语气平淡，客观冷静' },
                             { id: '2', name: '开心',      text: '嘴角微扬，略带笑意' },
@@ -956,12 +955,12 @@
                         useCustomPrompt.value = JSON.parse(savedUseCustom);
                     }
 
-                    // 启动时检查音色文件在服务器是否存在
+
                     setTimeout(() => {
                         syncTimbresOnStartup();
                     }, 1000);
 
-                    // 启动时预加载音效和BGM
+
                     preloadAudioAssets();
                 });
 
@@ -969,7 +968,7 @@
                     return ttsConfigs.value.find(c => c.id === currentTtsConfigId.value) || null;
                 });
 
-                // --- 配置管理逻辑 ---
+
                 const saveConfigsToLocal = () => {
                     localStorage.setItem('storyforge_configs', JSON.stringify(llmConfigs.value));
                 };
@@ -992,7 +991,7 @@
                     saveConfigsToLocal();
                     resetForm();
                     
-                    // 如果是第一个，自动选中
+
                     if (llmConfigs.value.length === 1) {
                         currentConfigId.value = llmConfigs.value[0].id;
                     }
@@ -1016,7 +1015,7 @@
                     isEditing.value = false;
                 };
 
-                // --- TTS 配置管理逻辑 ---
+
                 const saveTtsConfigsToLocal = () => {
                     localStorage.setItem('storyforge_tts_configs', JSON.stringify(ttsConfigs.value));
                 };
@@ -1055,12 +1054,12 @@
                     isEditingTts.value = false;
                 };
 
-                // --- 角色库管理逻辑 (左侧栏) ---
+
                 const addCharacter = () => {
                     characters.value.push({ 
                         id: Date.now().toString(), 
                         name: '新角色', 
-                        voiceFile: '' // Path for both display and synthesis
+                        voiceFile: '' 
                     });
                 };
 
@@ -1075,12 +1074,12 @@
                     const file = event.target.files[0];
                     if (file) {
                         timbreForm.value.refPath = file.name;
-                        timbreFile.value = file; // Store the file object
+                        timbreFile.value = file;
                     }
-                    event.target.value = ''; // Reset file input
+                    event.target.value = '';
                 };
 
-                // --- 音色库管理逻辑 ---
+
                 const saveTimbresToLocal = () => {
                     localStorage.setItem('storyforge_timbres', JSON.stringify(timbres.value));
                 };
@@ -1094,7 +1093,7 @@
                     for (const t of timbres.value) {
                         if (!t.refPath) continue;
                         try {
-                            // 尝试从本地 voice/ 目录加载 (模拟 SFX 存储方式)
+
                             const localRes = await fetch(`voice/${t.refPath}`);
                             
                             if (localRes.ok) {
@@ -1103,18 +1102,18 @@
                                 formData.append('audio', blob, t.refPath);
                                 formData.append('full_path', t.refPath);
 
-                                // 强制上传到 TTS 服务器
+
                                 await fetch(`${baseUrl}/v1/upload_audio`, {
                                     method: 'POST',
                                     body: formData,
                                 });
                                 console.log(`[启动同步] 音色 [${t.name}] 已自动上传。`);
                             } else {
-                                // 本地未找到，检查服务器
+
                                 const res = await fetch(`${baseUrl}/v1/check/audio?file_name=${encodeURIComponent(t.refPath)}`);
                                 const data = await res.json();
                                 if (!data.exists) {
-                                    console.warn(`[启动同步] 警告：音色 [${t.name}] 文件缺失 (本地 voice/ 目录和服务器均未找到)`);
+                                    console.warn(`[启动同步] 警告：音色 [${t.name}] 文件缺失 (本地目录和服务器均未找到)`);
                                 }
                             }
                         } catch(e) { /* 忽略连接错误 */ }
@@ -1129,7 +1128,7 @@
                         return alert('请选择一个有效的 TTS 服务以上传音频。');
                     }
 
-                    // A file MUST be selected when creating a NEW timbre.
+
                     if (!isEditingTimbre.value && !timbreFile.value) {
                         return alert('创建新音色时，必须选择一个参考音频文件。');
                     }
@@ -1137,14 +1136,14 @@
                     const filename = timbreForm.value.refPath;
                     const serverPath = filename; 
                     
-                    // 确定 ID (如果是新建，提前生成 ID 以便保存文件到本地存储)
+
                     let targetId = timbreForm.value.id;
                     if (!targetId) {
                         targetId = Date.now().toString();
                     }
 
                     try {
-                        // We only perform an upload if a file was actually selected via the file input.
+
                         if (timbreFile.value) {
                             const cfg = currentTtsConfig.value;
                             const baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
@@ -1167,7 +1166,7 @@
 
                         const newTimbreData = { ...timbreForm.value, id: targetId };
 
-                        // After a potential upload, save the metadata.
+
                         if (isEditingTimbre.value) {
                             const index = timbres.value.findIndex(c => c.id === targetId);
                             if (index !== -1) {
@@ -1188,7 +1187,7 @@
                 const editTimbre = (timbre) => {
                     timbreForm.value = { ...timbre };
                     isEditingTimbre.value = true;
-                    timbreFile.value = null; // Important: reset file on edit start
+                    timbreFile.value = null;
                 };
 
                 const deleteTimbre = async (id) => {
@@ -1201,10 +1200,10 @@
                 const resetTimbreForm = () => {
                     timbreForm.value = { id: '', name: '', description: '', refPath: '' };
                     isEditingTimbre.value = false;
-                    timbreFile.value = null; // Reset the stored file
+                    timbreFile.value = null;
                 };
 
-                // --- 音效库管理逻辑 ---
+
                 const saveSfxToLocal = () => {
                     localStorage.setItem('storyforge_sfx', JSON.stringify(sfxLibrary.value));
                 };
@@ -1253,7 +1252,7 @@
                 event.target.value = '';
                 };
 
-                // --- BGM库管理逻辑 ---
+
                 const saveBgmToLocal = () => {
                     localStorage.setItem('storyforge_bgm', JSON.stringify(bgmLibrary.value));
                 };
@@ -1302,7 +1301,7 @@
                     event.target.value = '';
                 };
 
-                // --- 滤波器库管理逻辑 ---
+
                 const saveFiltersToLocal = () => {
                     localStorage.setItem('storyforge_filters', JSON.stringify(filterLibrary.value));
                 };
@@ -1342,7 +1341,7 @@
                     isEditingFilter.value = false;
                 };
 
-                // --- 情绪预设管理逻辑 ---
+
                 const saveEmotionPresetsToLocal = () => {
                     localStorage.setItem('storyforge_emotions', JSON.stringify(emotionPresets.value));
                 };
@@ -1417,7 +1416,7 @@
                     return Array.from(roles);
                 });
 
-                // --- 拖拽与排序逻辑 ---
+
                 const draggingIndex = ref(-1);
                 const moveLineUp = (index) => {
                     if (index <= 0) return;
@@ -1434,7 +1433,7 @@
                 let sfxSources = [];
                 const isAuditioningId = ref(null);
 
-                // Helper for distortion
+
                 const makeDistortionCurve = (amount) => {
                     const k = typeof amount === 'number' ? amount : 50;
                     const n_samples = 44100;
@@ -1454,14 +1453,14 @@
 
                     try {
                         const char = characters.value.find(c => c.name === line.role);
-                        // Use char.voiceFile and check if it's a non-empty string
+
                         if (!char || !char.voiceFile) {
                             throw new Error(`角色 "${line.role}" 未绑定音色文件路径。\n\n请在左侧的角色列表中为该角色选择一个音色文件，或手动输入路径。`);
                         }
                         
                         const payload = {
                             text: line.text,
-                            audio_path: char.voiceFile, // Use voiceFile directly
+                            audio_path: char.voiceFile,
                             emo_text: line.emotion_text || '中立',
                         };
 
@@ -1493,13 +1492,13 @@
                 };
 
                 const generateAllLines = async () => {
-                    // Pre-flight check: 只要有一条没绑定音源，就终止
+
                     for (const [index, line] of scriptLines.value.entries()) {
                         if (line.type === 'dialogue') {
                             const char = characters.value.find(c => c.name === line.role);
                             if (!char || !char.voiceFile) {
                                 alert(`一键生成已终止。\n\n原因：第 ${index + 1} 行台词的角色（${line.role}）没有绑定音源。\n\n请在左侧的“角色列表”中为该角色选择一个有效的音色文件。`);
-                                return; // Abort the entire process
+                                return;
                             }
                         }
                     }
@@ -1510,11 +1509,11 @@
                     let failedCount = 0;
 
                     try {
-                        // 改为顺序执行，避免并发导致服务器 504/500 错误
+
                         for (const line of scriptLines.value) {
                             if (line.type === 'dialogue') {
                                 await generateLineAudio(line);
-                                // 如果生成后没有 audioUrl，说明失败了
+
                                 if (!line.audioUrl) failedCount++;
                             }
                         }
@@ -1536,14 +1535,14 @@
                 const playLineAudio = (line, stopPreviousSfx = true) => {
                     return new Promise(async (resolve, reject) => {
                         try {
-                        // 1. Resume AudioContext if it's suspended
+
                         if (audioContext.state === 'suspended') {
                             await audioContext.resume();
                         }
 
-                        // 2. Stop anything currently playing
+
                         if (dialogueSource) {
-                            dialogueSource.onended = null; // Prevent onended from firing on manual stop
+                            dialogueSource.onended = null;
                             dialogueSource.stop();
                             dialogueSource = null;
                         }
@@ -1553,17 +1552,17 @@
                             sfxSources = [];
                         }
 
-                        // If it was a stop request (clicking the same line in manual mode)
+
                         if (isAuditioningId.value === line.id) {
                             isAuditioningId.value = null;
                             return resolve();
                         }
 
-                        if (!line.audioUrl) return resolve(); // Resolve silently if no audio
+                        if (!line.audioUrl) return resolve(); 
 
                         isAuditioningId.value = line.id;
 
-                        // 3. Prepare loading promises (Parallel loading)
+
                         const loadDialogue = async () => {
                             const res = await fetch(line.audioUrl);
                             const ab = await res.arrayBuffer();
@@ -1585,20 +1584,20 @@
                             return results.filter(r => r !== null);
                         };
 
-                        // 4. Execute loads in parallel
+
                         const [dialogueBuffer, sfxBuffers] = await Promise.all([
                             loadDialogue(),
                             loadSfx()
                         ]);
 
-                        // 5. Set up dialogue
+
                             dialogueSource = audioContext.createBufferSource();
                             dialogueSource.buffer = dialogueBuffer;
 
                             const dialogueGain = audioContext.createGain();
                             dialogueGain.gain.setValueAtTime(line.dialogueVolume ?? 1.0, audioContext.currentTime);
 
-                            // --- Filter Logic ---
+
                             let lastNode = dialogueSource;
                             
                             if (line.filter) {
@@ -1621,13 +1620,13 @@
                                 }
                             }
 
-                            // Connect to gain then destination
+
                             lastNode.connect(dialogueGain).connect(audioContext.destination);
                             
                             const dialogueDuration = dialogueBuffer.duration;
-                            const now = audioContext.currentTime + 0.05; // Slight delay for sync
+                            const now = audioContext.currentTime + 0.05;
                             
-                            // 6. Schedule SFX
+
                             sfxBuffers.forEach(({ buffer, item }) => {
                                 const sSrc = audioContext.createBufferSource();
                                 sSrc.buffer = buffer;
@@ -1646,9 +1645,9 @@
                                 };
                             });
 
-                            // 7. Play dialogue
+
                             dialogueSource.onended = async () => {
-                                // This event fires on natural end or manual .stop()
+
                                 if (isAuditioningId.value === line.id) {
                                     isAuditioningId.value = null;
                                 }
@@ -1659,14 +1658,14 @@
 
                         } catch (e) {
                             console.error("Failed to play audio:", e);
-                            // alert('播放音频失败，请检查文件或网络。'); // Suppress alert for smoother UX
+
                             isAuditioningId.value = null;
-                            resolve(); // Resolve to not block sequence
+
                         }
                     });
                 };
 
-                // --- 存档管理逻辑 ---
+
                 const blobToBase64 = (blob) => {
                     return new Promise((resolve, reject) => {
                         const reader = new FileReader();
@@ -1677,16 +1676,16 @@
                 };
 
                 const exportScriptState = async () => {
-                    // 将音频转换为 Base64 以便保存
+
                     const linesToSave = await Promise.all(scriptLines.value.map(async (line) => {
                         const lineCopy = { ...line };
-                        lineCopy.isGenerating = false; // 清理状态
+                        lineCopy.isGenerating = false;
                         if (line.audioUrl && line.audioUrl.startsWith('blob:')) {
                             try {
                                 const res = await fetch(line.audioUrl);
                                 const blob = await res.blob();
                                 lineCopy.audioBase64 = await blobToBase64(blob);
-                                lineCopy.audioUrl = ''; // 导出时不保存 blob URL
+                                lineCopy.audioUrl = '';
                             } catch (e) {
                                 console.warn('导出音频失败:', line.id, e);
                             }
@@ -1732,12 +1731,11 @@
                                     if (data.rawAnalysisResult !== undefined) rawAnalysisResult.value = data.rawAnalysisResult;
                                     if (data.emotionIntensity !== undefined) emotionIntensity.value = data.emotionIntensity;
                                     
-                                    // 修复：读取存档时，如果存档包含角色列表则直接使用，否则根据台词重建角色列表
-                                    // 这样可以确保“没有的角色要删除”，并且“角色的音色选用也要保存”
+
                                     if (data.characters && Array.isArray(data.characters)) {
                                         characters.value = data.characters;
                                     } else {
-                                        // 兼容旧存档：从台词中提取角色
+
                                         const roles = new Set();
                                         data.scriptLines.forEach(l => {
                                             if (l.type === 'dialogue' && l.role) roles.add(l.role);
@@ -1752,14 +1750,14 @@
                                         });
                                     }
                                     
-                                    // 恢复音频数据 (Base64 -> Blob URL)
+
                                     const restoredLines = await Promise.all(data.scriptLines.map(async (line) => {
                                         if (line.audioBase64) {
                                             try {
                                                 const res = await fetch(line.audioBase64);
                                                 const blob = await res.blob();
                                                 line.audioUrl = URL.createObjectURL(blob);
-                                                // delete line.audioBase64; // 可选：释放内存，但保留在对象中也没关系
+
                                             } catch (err) {
                                                 console.warn('恢复音频失败:', line.id, err);
                                             }
@@ -1776,12 +1774,12 @@
                         } catch (err) {
                             alert('读取失败: ' + err.message);
                         }
-                        event.target.value = ''; // Reset
+                        event.target.value = '';
                     };
                     reader.readAsText(file);
                 };
 
-                // --- 导出音频逻辑 (WAV) ---
+
                 const exportAudio = async () => {
                     const dialogueLines = scriptLines.value.filter(l => l.type === 'dialogue');
                     if (dialogueLines.length === 0) return alert('脚本为空');
@@ -1800,12 +1798,12 @@
                             return await audioContext.decodeAudioData(ab);
                         };
 
-                        // 1. 加载所有台词音频
+
                         for (const line of dialogueLines) {
                             if (line.audioUrl) assets.dialogues[line.id] = await loadAudio(line.audioUrl);
                         }
 
-                        // 2. 加载用到的音效
+
                         const usedSfxNames = new Set();
                         scriptLines.value.forEach(l => { if (l.sfx) l.sfx.forEach(s => usedSfxNames.add(s.name)); });
                         for (const name of usedSfxNames) {
@@ -1815,7 +1813,7 @@
                             }
                         }
 
-                        // 3. 加载用到的 BGM
+
                         const usedBgmNames = new Set();
                         scriptLines.value.forEach(l => { if (l.type === 'bgm' && l.action === 'play') usedBgmNames.add(l.bgmName); });
                         for (const name of usedBgmNames) {
@@ -1825,7 +1823,7 @@
                             }
                         }
 
-                        // 4. 计算时间轴
+
                         let currentTime = 0;
                         const events = [];
                         const bgmSegments = [];
@@ -1845,7 +1843,7 @@
                             } else if (line.type === 'dialogue') {
                                 const buffer = assets.dialogues[line.id];
                                 if (buffer) {
-                                    // 模拟 playLineAudio 中的 0.05s 调度延迟，确保导出节奏与实时播放一致
+
                                     currentTime += 0.05;
                                     events.push({ type: 'dialogue', time: currentTime, buffer: buffer, line: line });
                                     currentTime += buffer.duration;
@@ -1853,13 +1851,13 @@
                                 currentTime += (line.break_duration || 0);
                             }
                         }
-                        if (currentBgm) bgmSegments.push({ ...currentBgm, end: currentTime + 2 }); // BGM 尾部淡出
+                        if (currentBgm) bgmSegments.push({ ...currentBgm, end: currentTime + 2 });
 
-                        // 5. 离线渲染
+
                         const totalDuration = currentTime + 1;
                         const offlineCtx = new OfflineAudioContext(2, totalDuration * 44100, 44100);
 
-                        // 调度 BGM
+
                         bgmSegments.forEach(seg => {
                             const buffer = assets.bgm[seg.name];
                             if (buffer) {
@@ -1877,7 +1875,7 @@
                             }
                         });
 
-                        // 调度台词和音效
+
                         events.forEach(evt => {
                             const dSrc = offlineCtx.createBufferSource();
                             dSrc.buffer = evt.buffer;
@@ -1885,7 +1883,7 @@
                             dGain.gain.value = evt.line.dialogueVolume ?? 1.0;
 
                             let lastNode = dSrc;
-                            // 应用滤镜
+
                             if (evt.line.filter) {
                                 const fConfig = filterLibrary.value.find(f => f.name === evt.line.filter);
                                 if (fConfig) {
@@ -1908,7 +1906,7 @@
                             lastNode.connect(dGain).connect(offlineCtx.destination);
                             dSrc.start(evt.time);
 
-                            // 调度音效
+
                             if (evt.line.sfx) {
                                 evt.line.sfx.forEach(s => {
                                     const sBuffer = assets.sfx[s.name];
@@ -1944,7 +1942,7 @@
                     }
                 };
 
-                // 辅助函数：AudioBuffer 转 WAV Blob
+
                 function bufferToWave(abuffer, len) {
                     const numOfChan = abuffer.numberOfChannels;
                     const length = len * numOfChan * 2 + 44;
@@ -1958,19 +1956,19 @@
                     function setUint16(data) { view.setUint16(offset, data, true); offset += 2; }
                     function setUint32(data) { view.setUint32(offset, data, true); offset += 4; }
 
-                    setUint32(0x46464952); // "RIFF"
-                    setUint32(length - 8); // file length - 8
-                    setUint32(0x45564157); // "WAVE"
-                    setUint32(0x20746d66); // "fmt " chunk
-                    setUint32(16); // length = 16
-                    setUint16(1); // PCM (uncompressed)
+                    setUint32(0x46464952);
+                    setUint32(length - 8);
+                    setUint32(0x45564157);
+                    setUint32(0x20746d66);
+                    setUint32(16);
+                    setUint16(1);
                     setUint16(numOfChan);
                     setUint32(abuffer.sampleRate);
-                    setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-                    setUint16(numOfChan * 2); // block-align
-                    setUint16(16); // 16-bit
-                    setUint32(0x61746164); // "data" - chunk
-                    setUint32(length - offset - 4); // chunk length
+                    setUint32(abuffer.sampleRate * 2 * numOfChan);
+                    setUint16(numOfChan * 2);
+                    setUint16(16);
+                    setUint32(0x61746164);
+                    setUint32(length - offset - 4);
 
                     for(i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
 
@@ -1986,7 +1984,7 @@
                     return new Blob([buffer], {type: "audio/wav"});
                 }
 
-                // --- 脚本制作逻辑 ---
+
                 const splitScript = () => {
                     if (!rawScript.value.trim()) return alert('请输入原文内容');
                     
@@ -2082,15 +2080,15 @@
                 const stopScriptSequentially = () => {
                     isSequencePlaying.value = false;
                     currentSequenceIndex.value = -1;
-                    // Stop dialogue audio
+
                     if (dialogueSource) {
                         try { dialogueSource.stop(); } catch(e) {}
                         dialogueSource = null;
                     }
-                    // Stop SFX audio
+
                     sfxSources.forEach(source => { try { source.stop(); } catch(e) {} });
                     sfxSources = [];
-                    // Stop BGM audio
+
                     if (bgmAudioNode && bgmGainNode) {
                         const oldNode = bgmAudioNode;
                         const oldGain = bgmGainNode;
@@ -2105,13 +2103,13 @@
                 };
 
                 const playBgm = async (bgmName, volume = 0.4) => {
-                    // Stop any existing BGM
+
                     if (bgmAudioNode && bgmGainNode) {
                         const oldNode = bgmAudioNode;
                         const oldGain = bgmGainNode;
                         const now = audioContext.currentTime;
                         
-                        // 淡出旧 BGM
+
                         oldGain.gain.cancelScheduledValues(now);
                         oldGain.gain.setValueAtTime(oldGain.gain.value, now);
                         oldGain.gain.linearRampToValueAtTime(0, now + 2);
@@ -2140,7 +2138,7 @@
                         bgmAudioNode.loop = true;
                         
                         bgmGainNode = audioContext.createGain();
-                        // 淡入新 BGM
+
                         bgmGainNode.gain.value = 0;
                         bgmGainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 2);
 
@@ -2158,7 +2156,7 @@
                     const startIndex = selectedLineIndex.value !== -1 ? selectedLineIndex.value : 0;
                     
                     for (let i = startIndex; i < scriptLines.value.length; i++) {
-                        if (!isSequencePlaying.value) break; // Check if stopped
+                        if (!isSequencePlaying.value) break;
                         
                         currentSequenceIndex.value = i;
                         const line = scriptLines.value[i];
@@ -2179,25 +2177,25 @@
                                     bgmGainNode = null;
                                 }
                             }
-                        } else { // 'dialogue'
+                        } else {
                             if (!line.audioUrl) {
-                                // 跳过未生成的台词
+
                                 continue;
                             }
                             
-                            // A promise that resolves when the line finishes playing
+
                             await playLineAudio(line, false);
 
                             if (!isSequencePlaying.value) break;
 
-                            // Handle break duration
+
                             if (line.break_duration > 0) {
                                 await new Promise(resolve => setTimeout(resolve, line.break_duration * 1000));
                             }
                         }
                     }
 
-                    // Reset when done or stopped
+
                     stopScriptSequentially();
                 };
 
@@ -2268,13 +2266,13 @@
                         if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         const data = await res.json();
                         const content = data.choices[0]?.message?.content || '';
-                        rawAnalysisResult.value = content; // 保存原始输出
+                        rawAnalysisResult.value = content; 
                         const jsonMatch = content.match(/\[\s*\{[\s\S]*\}\s*\]/);
                         const jsonStr = jsonMatch ? jsonMatch[0] : content.replace(/```json/g, '').replace(/```/g, '').trim();
                         
                         const parsed = JSON.parse(jsonStr);
                         if (Array.isArray(parsed)) {
-                            // 移除拦截逻辑，完全信任 Prompt (或允许用户手动修正幻觉)
+
                             const validParsed = parsed;
 
                             const newRoles = new Set();
@@ -2283,7 +2281,7 @@
                                 if (r) newRoles.add(r);
                             });
                             
-                            // 重新构建角色列表：清空并填充 (保留已有角色的音色配置)
+
                             const newCharacterList = [];
                             newRoles.forEach(rName => {
                                 const existing = characters.value.find(c => c.name === rName);
@@ -2307,16 +2305,16 @@
                             characters.value = newCharacterList;
 
                             scriptLines.value = validParsed.map(item => {
-                                // 智能匹配滤波器名称 (防止 AI 输出不完全匹配的名称导致下拉框不显示)
+
                                 let matchedFilter = '';
                                 if (item.filter) {
                                     const target = item.filter.trim();
-                                    // 1. 尝试精确匹配
+
                                     const exact = filterLibrary.value.find(f => f.name === target);
                                     if (exact) {
                                         matchedFilter = exact.name;
                                     } else {
-                                        // 2. 尝试模糊匹配 (例如 AI 输出 "电话音" 但库里是 "电话音 (Telephone)")
+
                                         const fuzzy = filterLibrary.value.find(f => f.name.includes(target) || target.includes(f.name));
                                         if (fuzzy) matchedFilter = fuzzy.name;
                                     }
@@ -2325,7 +2323,7 @@
                                 return {
                                     id: Date.now() + Math.random(),
                                     type: item.type || 'dialogue',
-                                    // Dialogue fields
+
                                     role: item.role_name || item.role || '旁白',
                                     text: item.text_content || item.text || item.content || '',
                                     emotion_text: item.emotion_text || item.emotion || '中立',
@@ -2337,7 +2335,7 @@
                                     dialogueVolume: 1.0,
                                     audioUrl: '',
                                     isGenerating: false,
-                                    // BGM fields
+
                                     action: item.action || 'play',
                                     volume: 0.4,
                                     bgmName: item.name || item.bgmName || ''
@@ -2354,7 +2352,7 @@
                     }
                 };
 
-                // --- 聊天逻辑 ---
+
                 const clearAll = () => {
                     result.value = '';
                     reasoning.value = '';
@@ -2416,7 +2414,7 @@
                             
                             buffer += decoder.decode(value, { stream: true });
                             const lines = buffer.split('\n');
-                            buffer = lines.pop(); // 保持最后一行完整
+                            buffer = lines.pop();
 
                             for (const line of lines) {
                                 const cleanLine = line.replace(/^data: /, '').trim();
@@ -2433,13 +2431,13 @@
                                         result.value += delta.content;
                                     }
                                 } catch (e) {
-                                    // 忽略部分解析错误
+
                                 }
                             }
                         }
                     } catch (e) { 
                         if (e.name === 'AbortError') {
-                            // 用户手动停止，不报错
+
                         } else {
                             error.value = e.message;
                             if (e.message.includes('Failed to fetch')) {
@@ -2452,7 +2450,7 @@
                     }
                 };
 
-                // --- TTS 逻辑 (SonicVale 协议) ---
+
                 
                 const handleFileUpload = (event) => {
                     const file = event.target.files[0];
@@ -2488,14 +2486,13 @@
                     const baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
 
                     try {
-                        // 1. 检查音频是否存在
+
                         const checkUrl = `${baseUrl}/v1/check/audio?file_name=${encodeURIComponent(ttsRefPath.value)}`;
                         const checkRes = await fetch(checkUrl, { signal: ttsAbortController.value.signal });
                         if (!checkRes.ok) throw new Error(`Check failed: ${checkRes.status}`);
                         const checkData = await checkRes.json();
 
-                        // 2. 上传逻辑：如果用户选择了文件，强制上传（覆盖）；否则检查服务端是否存在
-                        // 修改：即使服务端存在，只要用户选了新文件，就强制上传，防止文件内容不一致或服务端文件损坏
+
                         if (ttsRefFile.value) {
                             const formData = new FormData();
                             formData.append('audio', ttsRefFile.value);
@@ -2512,7 +2509,7 @@
                             throw new Error(`服务端未找到音频 "${ttsRefPath.value}"，且未选择本地文件进行上传。`);
                         }
 
-                        // 3. 合成语音
+
                         const synthPayload = {
                             text: textToSpeak,
                             audio_path: ttsRefPath.value,
@@ -2533,13 +2530,13 @@
                             throw new Error(`Synthesis failed: ${errText}`);
                         }
 
-                        // 4. 处理二进制音频流
+
                         const blob = await synthRes.blob();
                         audioUrl.value = URL.createObjectURL(blob);
 
                     } catch (e) {
                         if (e.name === 'AbortError') {
-                            // 用户手动停止
+
                         } else {
                             console.error(e);
                             ttsError.value = e.message;
@@ -2563,51 +2560,50 @@
                 };
 
                 return { 
-                    // State
+
                     activeTab, llmConfigs, currentConfigId, 
                     form, isEditing,
                     filterLibrary, filterForm, isEditingFilter, saveFilter, editFilter, deleteFilter, resetFilterForm,
                     prompt, result, reasoning, error, loading,
                     
-                    // TTS State
+
                     currentTtsConfigId, ttsConfigs, ttsRefPath, ttsEmoText,
                     audioUrl, ttsLoading, ttsError,
                     
-                    // TTS Actions
+
                     handleFileUpload, synthesizeAudio, stopTtsGeneration,
 
-                    // Actions
+
                     saveConfig, editConfig, deleteConfig, resetForm,
-                    // TTS Actions
+
                     ttsConfigs, ttsForm, isEditingTts,
                     saveTtsConfig, editTtsConfig, deleteTtsConfig, resetTtsForm,
                     
-                    // Character Actions (New)
+
                     characters, addCharacter, deleteCharacter,
 
-                    // Timbre Actions
                     timbres, timbreForm, isEditingTimbre, selectedTimbreId,
                     saveTimbre, editTimbre, deleteTimbre, resetTimbreForm, handleTimbreFileUpload,
 
-                    // Emotion Actions
+
                     emotionPresets, emotionForm, isEditingEmotion,
                     saveEmotion, editEmotion, deleteEmotion, resetEmotionForm, getPresetId, applyPresetToLine, getEmotionSelectValue, resetEmotionsToDefault,
 
-                    // SFX Actions
+
                     sfxLibrary, sfxForm, isEditingSfx,
                     saveSfx, editSfx, deleteSfx, resetSfxForm, handleSfxFileUpload,
                     addLineSfx, removeLineSfx,
 
-                    // BGM Actions
+
                     bgmLibrary, bgmForm, isEditingBgm,
                     saveBgm, editBgm, deleteBgm, resetBgmForm, handleBgmFileUpload,
 
-                    // Audition Actions
+
                     availableRoles, isAuditioningId, generateLineAudio, playLineAudio,
 
                     send, stopGeneration, clearAll,
 
-                    // Script Actions
+
                     rawScript, scriptLines, splitScript, removeScriptLine, autoResizeTextarea, analyzeScript, isAnalyzingScript, rawAnalysisResult, emotionIntensity,
                     addBgmBlock, addDialogueBlock, selectedLineIndex,
                     generateAllLines, isGeneratingAll,
