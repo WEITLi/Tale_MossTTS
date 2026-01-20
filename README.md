@@ -4,7 +4,9 @@
 
 界面简洁，使用简单，能够一键生成，用户可以对生成的音频内容进行微调。
 
-b站生成效果演示视频：[https://www.bilibili.com/video/BV1jYkGBqEkL](https://www.bilibili.com/video/BV1Mbk3BHEDk)
+b站生成效果演示视频：
+
+https://www.bilibili.com/video/BV1Mbk3BHEDk
 
 https://www.bilibili.com/video/BV1v2kjB5EKV
 
