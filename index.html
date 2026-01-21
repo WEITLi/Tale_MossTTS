@@ -1754,11 +1754,6 @@
                     const data = {
                         version: '2.0',
                         timestamp: new Date().toISOString(),
-                        // 全局配置
-                        configs: {
-                            llm: llmConfigs.value,
-                            tts: ttsConfigs.value
-                        },
                         // 资源库
                         libraries: {
                             sfx: sfxExport,
@@ -1773,9 +1768,7 @@
                             rawAnalysisResult: rawAnalysisResult.value,
                             emotionIntensity: emotionIntensity.value,
                             characters: characters.value,
-                            scriptLines: linesToSave,
-                            customPromptTemplate: customPromptTemplate.value,
-                            useCustomPrompt: useCustomPrompt.value
+                            scriptLines: linesToSave
                         }
                     };
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1828,15 +1821,7 @@
 
                             if (data.version === '2.0' || data.project) {
                                 // v2.0 完整工程格式
-                                if (!confirm('检测到完整工程文件。导入将覆盖当前的【所有配置】（包括模型、音色、音效库等）。确定继续吗？')) return;
-
-                                // 1. 恢复配置
-                                if (data.configs) {
-                                    llmConfigs.value = data.configs.llm || [];
-                                    ttsConfigs.value = data.configs.tts || [];
-                                    saveConfigsToLocal();
-                                    saveTtsConfigsToLocal();
-                                }
+                                if (!confirm('检测到完整工程文件。导入将覆盖当前的【资源库和脚本】（模型配置不会被覆盖）。确定继续吗？')) return;
 
                                 // 2. 恢复资源库
                                 if (data.libraries) {
@@ -1858,9 +1843,6 @@
                                 rawAnalysisResult.value = proj.rawAnalysisResult || '';
                                 emotionIntensity.value = proj.emotionIntensity || 5;
                                 characters.value = proj.characters || [];
-                                customPromptTemplate.value = proj.customPromptTemplate || defaultPromptTemplate;
-                                useCustomPrompt.value = proj.useCustomPrompt || false;
-                                savePrompt(); // 保存 Prompt 设置
 
                                 // 恢复台词音频
                                 const restoredLines = await Promise.all(proj.scriptLines.map(async (line) => {
