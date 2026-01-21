@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, './')));
 
 // 3. 代理配置
-const targetUrl = 'https://ie0wp9c4uz-8300.cnb.run'; // 你的远程 API 地址
+const targetUrl = 'https://a7la0k6c93-8300.cnb.run/'; // 你的远程 API 地址
 
 const proxyOptions = {
     target: targetUrl,
