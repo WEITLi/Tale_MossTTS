@@ -25,7 +25,7 @@ Fork云原生仓库后，即可点击按钮在线启动部署，启动后，在�
 https://www.bilibili.com/video/BV1HwyYBTEcy?spm_id_from=333.788.videopod.sections&vd_source=d1681b7d6b38237df98a7c9aa196d8ce
 
 
-### LLM可以使用Gemini，
+### LLM使用OpenAI通用接口
 LLM支持使用各种支持OpenAI通用接口的大模型。
 
 本人测试使用的是Gemini的Openai通用接口。输入Base URL：https://generativelanguage.googleapis.com/v1beta/openai   以及你的APIKEY即可设置完成。
