@@ -16,11 +16,11 @@ https://www.bilibili.com/video/BV1v2kjB5EKV
 
 https://www.bilibili.com/video/BV1jYkGBqEkL
 
-### 在线使用页面（须自行配置LLM和IndexTTS2的API）：
+### 工具在线使用页面（须自行配置LLM和IndexTTS2的API）：
 
 https://sdsds222.github.io/Unitale/
 
-
+现已支持台词剪辑和优化编辑器保存功能。
 
 ### IndexTTS 2 免费云原生项目：
 
