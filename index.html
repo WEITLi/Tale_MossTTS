@@ -489,10 +489,17 @@
                         <button @click="triggerImport" :disabled="isExportingProject" class="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-bold hover:bg-amber-200 transition-all flex items-center gap-1 disabled:opacity-50">
                             {{ isExportingProject ? '请等待...' : '导入完整工程' }}
                         </button>
+                        <button @click="triggerImportTxt" :disabled="isExportingProject" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-all flex items-center gap-1 disabled:opacity-50">
+                            导入TXT
+                        </button>
+                        <button @click="exportSRT" :disabled="isExportingAudio" class="px-3 py-1.5 bg-teal-100 text-teal-700 rounded-lg text-xs font-bold hover:bg-teal-200 transition-all flex items-center gap-1 disabled:opacity-50 disabled:cursor-wait">
+                            导出SRT
+                        </button>
                         <button @click="exportAudio" :disabled="isExportingAudio" class="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-bold hover:bg-purple-200 transition-all flex items-center gap-1 disabled:opacity-50 disabled:cursor-wait">
                             {{ isExportingAudio ? '⏳ 处理中...' : '导出音频' }}
                         </button>
                         <input type="file" ref="importFileRef" @change="handleImportFile" accept=".json" class="hidden">
+                        <input type="file" ref="importTxtRef" @change="handleImportTxt" accept=".txt" class="hidden">
                     </div>
                 </div>
 
@@ -981,6 +988,7 @@
                 let sequenceAbortController = null;
                 const isExportingAudio = ref(false);
                 const importFileRef = ref(null);
+                const importTxtRef = ref(null);
                 const isExportingProject = ref(false);
                 const exportStatus = ref('');
                 let bgmAudioNode = null;
@@ -2501,6 +2509,21 @@
                     reader.readAsText(file);
                 };
 
+                const triggerImportTxt = () => {
+                    importTxtRef.value.click();
+                };
+
+                const handleImportTxt = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        rawScript.value = e.target.result;
+                    };
+                    reader.readAsText(file);
+                    event.target.value = '';
+                };
+
                 // --- 导出音频逻辑 (WAV) ---
                 const exportAudio = async () => {
                     const dialogueLines = scriptLines.value.filter(l => l.type === 'dialogue');
@@ -2670,6 +2693,151 @@
                     } catch(e) {
                         console.error(e);
                         alert('导出失败: ' + e.message);
+                    } finally {
+                        isExportingAudio.value = false;
+                    }
+                };
+
+                const exportSRT = async () => {
+                    const dialogueLines = scriptLines.value.filter(l => l.type === 'dialogue');
+                    if (dialogueLines.length === 0) return alert('脚本为空');
+                    
+                    if (dialogueLines.some(l => !l.audioUrl)) {
+                        if (!confirm('部分台词尚未生成音频，导出字幕时时间轴可能不准确（将跳过未生成音频的行）。确定继续吗？')) return;
+                    }
+
+                    isExportingAudio.value = true; // 复用 loading 状态
+
+                    try {
+                        // 1. 加载所有台词音频以获取时长
+                        const audioMap = new Map();
+                        const loadPromises = dialogueLines.map(async (line) => {
+                            if (line.audioUrl) {
+                                const buffer = await loadAudioBuffer(line.audioUrl);
+                                if (buffer) audioMap.set(line.id, buffer);
+                            }
+                        });
+                        await Promise.all(loadPromises);
+
+                        let srtContent = '';
+                        let currentTime = 0;
+                        let counter = 1;
+
+                        const formatTime = (seconds) => {
+                            const date = new Date(0);
+                            date.setMilliseconds(seconds * 1000);
+                            const hh = String(Math.floor(seconds / 3600)).padStart(2, '0');
+                            const mm = String(date.getUTCMinutes()).padStart(2, '0');
+                            const ss = String(date.getUTCSeconds()).padStart(2, '0');
+                            const ms = String(date.getUTCMilliseconds()).padStart(3, '0');
+                            return `${hh}:${mm}:${ss},${ms}`;
+                        };
+
+                        // 辅助函数：智能切割长字幕
+                        const splitLongText = (text) => {
+                            if (!text) return [];
+                            
+                            // 1. 去除句末的逗号和句号 (保留问号感叹号等)
+                            let processed = text.replace(/[，。,.]\s*$/, '');
+
+                            // 2. 如果文本较短，直接返回
+                            if (processed.length <= 25) return [processed];
+
+                            // 3. 优先按标点符号切割
+                            // 句号(。)和点(.)：作为分隔符消耗掉 (不保留在句末)
+                            // 问号、感叹号等：保留在上一句
+                            // 逗号：不作为主分隔符，保留在句中 (除非后续长度强制切割)
+                            const parts = processed.split(/[。.]\s*|(?<=[！？；：!?])\s*/).filter(p => p.trim().length > 0);
+                            
+                            const finalParts = [];
+                            for (const p of parts) {
+                                // 3. 如果切割后的片段依然过长 (> 30字符)，强制按长度再次切割
+                                if (p.length > 30) {
+                                    let remaining = p;
+                                    while (remaining.length > 0) {
+                                        let cutIndex = 25;
+                                        if (remaining.length <= 25) {
+                                            cutIndex = remaining.length;
+                                        }
+                                        else {
+                                            // 尝试在逗号或空格处断句
+                                            // 优先找逗号
+                                            const lastComma = Math.max(remaining.lastIndexOf('，', 25), remaining.lastIndexOf(',', 25));
+                                            const lastSpace = remaining.lastIndexOf(' ', 25);
+                                            
+                                            if (lastComma > 10) {
+                                                cutIndex = lastComma; // 切在逗号处 (逗号会被丢弃)
+                                            } else if (lastSpace > 10) {
+                                                cutIndex = lastSpace;
+                                            }
+                                        }
+                                        finalParts.push(remaining.substring(0, cutIndex).trim());
+                                        
+                                        // 如果是在逗号处切的，要跳过这个逗号
+                                        if (remaining[cutIndex] === '，' || remaining[cutIndex] === ',') {
+                                            remaining = remaining.substring(cutIndex + 1).trim();
+                                        } else {
+                                            remaining = remaining.substring(cutIndex).trim();
+                                        }
+                                    }
+                                } else {
+                                    finalParts.push(p);
+                                }
+                            }
+                            return finalParts;
+                        };
+
+                        for (const line of scriptLines.value) {
+                            if (line.type === 'dialogue') {
+                                const buffer = audioMap.get(line.id);
+                                if (buffer) {
+                                    const trimStart = line.trimStart || 0;
+                                    const trimEnd = line.trimEnd || 1;
+                                    const duration = buffer.duration * (trimEnd - trimStart);
+                                    const totalDuration = duration;
+                                    
+                                    const startTime = currentTime + 0.05; // 对应 exportAudio 的 0.05s 偏移
+                                    
+                                    // 获取切割后的字幕片段
+                                    const textSegments = splitLongText(line.text);
+                                    const totalLength = textSegments.reduce((acc, cur) => acc + cur.length, 0);
+                                    
+                                    let segmentStartTime = startTime;
+
+                                    if (totalLength > 0) {
+                                        for (const segment of textSegments) {
+                                            // 按字符长度比例分配时间
+                                            const segmentRatio = segment.length / totalLength;
+                                            const segmentDuration = totalDuration * segmentRatio;
+                                            const segmentEndTime = segmentStartTime + segmentDuration;
+
+                                            srtContent += `${counter}\n`;
+                                            srtContent += `${formatTime(segmentStartTime)} --> ${formatTime(segmentEndTime)}\n`;
+                                            srtContent += `${segment}\n\n`;
+
+                                            counter++;
+                                            segmentStartTime = segmentEndTime;
+                                        }
+                                    }
+                                    
+                                    currentTime = startTime + totalDuration;
+                                }
+                                currentTime += (line.break_duration || 0);
+                            }
+                        }
+
+                        const blob = new Blob([srtContent], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `Unitale字幕文件_${Date.now()}.srt`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    } catch (e) {
+                        console.error(e);
+                        alert('导出SRT失败: ' + e.message);
                     } finally {
                         isExportingAudio.value = false;
                     }
@@ -3401,7 +3569,8 @@
                     drawWaveform, startDragTrim, // Exported for template
                     generateAllLines, isGeneratingAll,
                     moveLineUp, moveLineDown,
-                    exportScriptState, triggerImport, handleImportFile, importFileRef, exportAudio, isExportingAudio, 
+                    exportScriptState, triggerImport, handleImportFile, importFileRef, exportAudio, isExportingAudio,
+                    exportSRT, triggerImportTxt, handleImportTxt, importTxtRef,
                     isExportingProject, exportStatus,
                     playScriptSequentially, stopScriptSequentially, isSequencePlaying, currentSequenceIndex,
 
