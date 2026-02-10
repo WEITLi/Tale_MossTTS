@@ -15,6 +15,10 @@
 
 b站生成效果演示视频：
 
+https://www.bilibili.com/video/BV1qjF1zuEc5/
+
+https://www.bilibili.com/video/BV1GpF1zNEXm/
+
 https://www.bilibili.com/video/BV1AkzLB7E8M
 
 https://www.bilibili.com/video/BV1v2kjB5EKV
