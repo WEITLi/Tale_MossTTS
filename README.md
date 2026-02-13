@@ -27,7 +27,7 @@ https://www.bilibili.com/video/BV1v2kjB5EKV
 
 https://www.bilibili.com/video/BV1jYkGBqEkL
 
-### 工具在线使用页面（须自行配置LLM和IndexTTS2的API）：
+### 工具在线使用页面（须自行配置LLM和云原生TTS项目的URL）：
 
 https://sdsds222.github.io/Unitale/
 
