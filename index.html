@@ -11,7 +11,7 @@
 
     gtag('config', 'G-4D36DBYDJX');
     </script>
-    <title>unitale</title>
+    <title>unitale ai工具</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
@@ -45,10 +45,10 @@
     <div id="app" class="w-full max-w-[96%] mx-auto p-6 rounded-2xl shadow-2xl">
         <header class="mb-6 flex justify-between items-end">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">Unitale <span class="text-blue-600">1.2.3</span></h1>
-                <p style="color: rgb(39, 92, 120);" class="text-slate-400 text-xs mt-1">多角色音效有声书生成工具</p>
+                <h1 class="text-2xl font-bold text-slate-800">Unitale AI <span class="text-blue-600">1.3</span></h1>
+                <p style="color: rgb(39, 92, 120);" class="text-slate-400 text-xs mt-1">多角色音效合成有声书生成工具</p>
             </div>
-            <div class="text-[10px] text-slate-300">v1.2.3</div>
+            <div class="text-[10px] text-slate-300">v1.3</div>
         </header>
         
         <!-- 标签页导航 -->
@@ -461,12 +461,30 @@
                             
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">音色选择</label>
-                                <select v-model="char.voiceFile" class="w-full px-2 py-1.5 border rounded-md text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500">
-                                    <option value="">-- 请选择音色 --</option>
-                                    <option v-for="timbre in timbres" :key="timbre.id" :value="timbre.refPath">
-                                        {{ timbre.name }}
-                                    </option>
-                                </select>
+                                <div class="flex gap-1">
+                                    <select v-model="char.voiceFile" class="flex-1 px-2 py-1.5 border rounded-md text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500">
+                                        <option value="">-- 请选择音色 --</option>
+                                        <option v-for="timbre in timbres" :key="timbre.id" :value="timbre.refPath">
+                                            {{ timbre.name }}
+                                        </option>
+                                    </select>
+                                    <button @click="playPreview(char.voiceFile)" :disabled="!char.voiceFile" class="px-2 bg-slate-100 border border-slate-200 rounded text-slate-500 hover:text-green-600 disabled:opacity-50" title="试听当前音色">
+                                        <svg v-if="previewPlayingFile === char.voiceFile" class="h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                        <svg v-else class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-2 pt-2 border-t border-slate-100 space-y-2">
+                                <textarea v-model="char.voiceDescription" rows="2" class="w-full px-2 py-1.5 text-[10px] border rounded bg-slate-50 focus:ring-1 focus:ring-blue-500 outline-none resize-none text-slate-600" placeholder="音色描述 (例如: 甜美少女音)"></textarea>
+                                <div class="flex gap-1">
+                                    <button @click="analyzeCharacterVoice(char)" :disabled="char.isAnalyzing" class="flex-1 px-2 py-1.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded text-[10px] font-bold hover:bg-indigo-100 transition-colors flex justify-center items-center gap-1">
+                                        <span v-if="char.isAnalyzing" class="animate-spin">⏳</span>AI分析音色
+                                    </button>
+                                    <button @click="generateQwenVoice(char)" :disabled="char.isGeneratingVoice" class="flex-1 px-2 py-1.5 bg-pink-50 text-pink-600 border border-pink-100 rounded text-[10px] font-bold hover:bg-pink-100 transition-colors flex justify-center items-center gap-1">
+                                        <span v-if="char.isGeneratingVoice" class="animate-spin">⏳</span>Qwen生成音色
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div v-if="characters.length === 0" class="text-center text-xs text-slate-400 py-4">暂无角色，请点击新增</div>
@@ -1357,6 +1375,9 @@
                                 for (const item of lib) {
                                     const filename = item[fileKey];
                                     if (filename) {
+                                        // 优化：如果内存中已存在，跳过重复加载
+                                        if (localFileMap.value.has(filename)) continue;
+
                                         const blob = await loadAssetFromDB(filename);
                                         if (blob) {
                                             const file = new File([blob], filename, { type: blob.type });
@@ -1369,6 +1390,8 @@
                             await restoreAssets(sfxLibrary.value, 'filename');
                             await restoreAssets(bgmLibrary.value, 'filename');
                             await restoreAssets(timbres.value, 'refPath');
+                            // 修复 Bug：确保加载角色当前绑定的音色文件（即使它已被音色库更新覆盖，属于“旧版”文件，也需要加载以便该角色使用）
+                            await restoreAssets(characters.value, 'voiceFile');
 
                             // 3. Restore Script Lines
                             const restoredLines = [];
@@ -1497,6 +1520,117 @@
                     characters.value = characters.value.filter(c => c.id !== id);
                 };
 
+                const analyzeCharacterVoice = async (char) => {
+                    if (!currentConfig.value) return alert('请先在“模型配置”中配置 LLM');
+                    if (!rawScript.value.trim()) return alert('请先在右侧输入小说原文');
+
+                    char.isAnalyzing = true;
+                    try {
+                        const promptText = `请根据以下小说片段，简要描述角色“${char.name}”的音色特征。\n要求：必须要带上性别，对音色的描述文本非常精炼，控制在20字以内。重点描述声音的物理质感（如声线粗细、年龄感、沙哑/清脆等），不要包含过多的性格或情绪描写。直接输出描述，不要废话。\n\n小说片段：\n${rawScript.value.substring(0, 3000)}`;
+                        
+                        const cfg = currentConfig.value;
+                        let url = cfg.baseUrl.trim().replace(/\/+$/, '');
+                        if (!url.endsWith('/chat/completions')) url += '/chat/completions';
+
+                        let body = { model: cfg.model, messages: [{ role: 'user', content: promptText }], stream: false };
+                        if (cfg.params) {
+                            try { body = { ...body, ...JSON.parse(cfg.params) }; } catch (e) {}
+                        }
+
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.key}` },
+                            body: JSON.stringify(body)
+                        });
+
+                        if (!res.ok) throw new Error(`LLM 请求失败: ${res.status}`);
+                        const data = await res.json();
+                        const content = data.choices[0]?.message?.content || '';
+                        char.voiceDescription = content.trim();
+                    } catch (e) {
+                        alert('分析失败: ' + e.message);
+                    } finally {
+                        char.isAnalyzing = false;
+                    }
+                };
+
+                const generateQwenVoice = async (char) => {
+                    if (!currentTtsConfig.value) return alert('请先选择 TTS 服务');
+                    if (!char.voiceDescription) return alert('请先填写音色描述');
+
+                    char.isGeneratingVoice = true;
+                    try {
+                        const cfg = currentTtsConfig.value;
+                        let baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                        if (baseUrl.endsWith('/v1')) baseUrl = baseUrl.slice(0, -3);
+                        
+                        const payload = {
+                            voice_description: char.voiceDescription,
+                            text: `我是${char.name}，这是根据描述生成的参考音色，初次见面，请多多关照。`
+                        };
+
+                        // 1. 调用 Qwen3 生成音频
+                        const genRes = await fetch(`${baseUrl}/v1/qwen/design`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!genRes.ok) {
+                            const err = await genRes.text();
+                            throw new Error(`生成失败: ${err}`);
+                        }
+
+                        const blob = await genRes.blob();
+                        const filename = `qwen_${char.name}_${Date.now()}.wav`;
+                        const file = new File([blob], filename, { type: 'audio/wav' });
+
+                        // 2. 保存到本地资源管理
+                        localFileMap.value.set(filename, file);
+                        await saveAssetToDB(filename, file);
+
+                        // 3. 上传回 TTS 服务器 (用于 IndexTTS 调用)
+                        const formData = new FormData();
+                        formData.append('audio', file);
+                        formData.append('full_path', filename);
+                        
+                        const upRes = await fetch(`${baseUrl}/v1/upload_audio`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        if (!upRes.ok) throw new Error('上传参考音频失败');
+
+                        // 4. 添加或更新音色库
+                        const timbreName = `${char.name}_AI`;
+                        const existingIndex = timbres.value.findIndex(t => t.name === timbreName);
+                        
+                        if (existingIndex !== -1) {
+                            // 更新已有音色
+                            timbres.value[existingIndex].description = char.voiceDescription;
+                            timbres.value[existingIndex].refPath = filename;
+                        } else {
+                            // 新增音色
+                            timbres.value.push({
+                                id: Date.now().toString(),
+                                name: timbreName,
+                                description: char.voiceDescription,
+                                refPath: filename
+                            });
+                        }
+
+                        // 5. 选中该音色
+                        char.voiceFile = filename;
+                        
+                        // 6. 自动保存
+                        triggerAutoSave();
+
+                    } catch (e) {
+                        console.error(e);
+                        alert('生成音色失败: ' + e.message);
+                    } finally {
+                        char.isGeneratingVoice = false;
+                    }
+                };
 
 
                 const handleTimbreFileUpload = (event) => {
@@ -1526,7 +1660,8 @@
                         return;
                     }
 
-                    const baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                    let baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                    if (baseUrl.endsWith('/v1')) baseUrl = baseUrl.slice(0, -3);
                     console.log(`正在同步音色文件到服务器: ${baseUrl}`);
 
                     for (const t of timbres.value) {
@@ -1596,7 +1731,8 @@
                         // We only perform an upload if a file was actually selected via the file input.
                         if (timbreFile.value) {
                             const cfg = currentTtsConfig.value;
-                            const baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                            let baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                            if (baseUrl.endsWith('/v1')) baseUrl = baseUrl.slice(0, -3);
                             
                             const formData = new FormData();
                             formData.append('audio', timbreFile.value, filename);
@@ -1912,7 +2048,8 @@
                         };
 
                         const cfg = currentTtsConfig.value;
-                        const baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                        let baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                        if (baseUrl.endsWith('/v1')) baseUrl = baseUrl.slice(0, -3);
 
                         // --- 自动上传逻辑 (Lazy Upload) ---
                         // 检查本地是否有该音色文件，如果有，则检查服务器是否存在，不存在则上传
@@ -3469,7 +3606,8 @@
                     ttsAbortController.value = new AbortController();
 
                     const cfg = currentTtsConfig.value;
-                    const baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                    let baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                    if (baseUrl.endsWith('/v1')) baseUrl = baseUrl.slice(0, -3);
 
                     try {
                         // 1. 检查音频是否存在
@@ -3568,6 +3706,7 @@
                     
                     // Character Actions (New)
                     characters, addCharacter, deleteCharacter,
+                    analyzeCharacterVoice, generateQwenVoice,
 
                     // Timbre Actions
                     timbres, timbreForm, isEditingTimbre, selectedTimbreId,
