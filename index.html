@@ -747,6 +747,7 @@
                     </div>
                 </div>
                 
+                <h4 class="text-sm font-bold text-slate-600 mb-2">1. 剧本拆分与分析 Prompt</h4>
                 <div class="flex items-center gap-2 mb-4 bg-white p-3 rounded-lg border border-slate-200">
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" v-model="useCustomPrompt" class="sr-only peer">
@@ -759,6 +760,28 @@
                 <textarea v-model="customPromptTemplate" :disabled="!useCustomPrompt" :class="['w-full h-[60vh] p-3 text-xs font-mono border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-3', !useCustomPrompt ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-700']" spellcheck="false"></textarea>
                 <div class="mt-2 text-xs text-slate-500">
                     <span class="font-bold">可用变量:</span> ${sfxSection}, ${bgmSection}, ${bgmExampleLine}, ${sfxExample}, ${rawScript}
+                </div>
+
+                <hr class="my-6 border-slate-200">
+
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-sm font-bold text-slate-600">2. 角色音色分析 Prompt</h4>
+                    <div class="space-x-2">
+                        <button @click="saveVoicePrompt" class="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-200 transition-all">保存音色Prompt</button>
+                        <button @click="resetVoicePrompt" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition-all">恢复默认</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 mb-4 bg-white p-3 rounded-lg border border-slate-200">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" v-model="useCustomVoicePrompt" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm font-bold text-slate-700">启用自定义音色分析 Prompt</span>
+                    </label>
+                    <span class="text-xs text-slate-400 ml-2">(关闭时将使用系统内置的默认 Prompt)</span>
+                </div>
+                <textarea v-model="customVoicePromptTemplate" :disabled="!useCustomVoicePrompt" :class="['w-full h-48 p-3 text-xs font-mono border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-3', !useCustomVoicePrompt ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-700']" spellcheck="false"></textarea>
+                <div class="mt-2 text-xs text-slate-500">
+                    <span class="font-bold">可用变量:</span> ${charName}, ${rawScript}
                 </div>
             </div>
         </div>
@@ -1138,6 +1161,11 @@
                 const customPromptTemplate = ref(defaultPromptTemplate);
                 const useCustomPrompt = ref(false);
 
+                const defaultVoicePromptTemplate = `请根据以下小说片段，简要描述角色“\${charName}”的音色特征。\n要求：必须要带上性别，对音色的描述文本非常精炼，控制在20字以内。重点描述声音的物理质感（如声线粗细、年龄感、沙哑/清脆等），不要包含过多的性格或情绪描写。直接输出描述，不要废话。\n\n小说片段：\n\${rawScript}`;
+
+                const customVoicePromptTemplate = ref(defaultVoicePromptTemplate);
+                const useCustomVoicePrompt = ref(false);
+
                 // --- 音频引擎与缓存 (Audio Engine & Cache) ---
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const audioBufferCache = new Map();
@@ -1330,6 +1358,15 @@
                     const savedUseCustom = localStorage.getItem('storyforge_use_custom_prompt');
                     if (savedUseCustom) {
                         useCustomPrompt.value = JSON.parse(savedUseCustom);
+                    }
+
+                    const savedVoicePrompt = localStorage.getItem('storyforge_voice_prompt_template');
+                    if (savedVoicePrompt) {
+                        customVoicePromptTemplate.value = savedVoicePrompt;
+                    }
+                    const savedUseCustomVoice = localStorage.getItem('storyforge_use_custom_voice_prompt');
+                    if (savedUseCustomVoice) {
+                        useCustomVoicePrompt.value = JSON.parse(savedUseCustomVoice);
                     }
 
                     // --- Restore from IndexedDB ---
@@ -1526,7 +1563,10 @@
 
                     char.isAnalyzing = true;
                     try {
-                        const promptText = `请根据以下小说片段，简要描述角色“${char.name}”的音色特征。\n要求：必须要带上性别，对音色的描述文本非常精炼，控制在20字以内。重点描述声音的物理质感（如声线粗细、年龄感、沙哑/清脆等），不要包含过多的性格或情绪描写。直接输出描述，不要废话。\n\n小说片段：\n${rawScript.value.substring(0, 3000)}`;
+                        const templateToUse = useCustomVoicePrompt.value ? customVoicePromptTemplate.value : defaultVoicePromptTemplate;
+                        const promptText = templateToUse
+                            .replace(/\${charName}/g, char.name)
+                            .replace(/\${rawScript}/g, rawScript.value.substring(0, 3000));
                         
                         const cfg = currentConfig.value;
                         let url = cfg.baseUrl.trim().replace(/\/+$/, '');
@@ -2565,8 +2605,11 @@
                                     // 不再调用 save*ToLocal，因为数据仅在内存中
                                     
                                     // 4. 同步音色到服务器
-                                    await syncTimbresWithServer();
-                                    // await syncTimbresWithServer(); // 移除导入时的自动同步，改为生成时按需上传
+                                    try {
+                                        await syncTimbresWithServer();
+                                    } catch (e) {
+                                        console.warn("Timbre sync failed:", e);
+                                    }
                                 }
 
                                 // 3. 恢复项目状态
@@ -2600,7 +2643,14 @@
                                 
                                 // 执行批量保存 (一次性写入所有文件)
                                 exportStatus.value = '写入数据库...';
-                                if (assetsToSave.length > 0) await saveAssetsBatch(assetsToSave);
+                                if (assetsToSave.length > 0) {
+                                    try {
+                                        await saveAssetsBatch(assetsToSave);
+                                    } catch (e) {
+                                        console.error("Asset save failed:", e);
+                                        alert("警告：部分音频资源保存到数据库失败（可能是空间不足），刷新页面后可能会丢失音频文件。但脚本和角色设置将尝试保存。");
+                                    }
+                                }
                                 
                                 // 强制保存一次项目状态到 DB，确保 JSON 数据也同步
                                 await saveProjectToDB();
@@ -2610,6 +2660,9 @@
                             } else if (data.scriptLines && Array.isArray(data.scriptLines)) {
                                 // v1.x 旧版存档格式兼容
                                 if (confirm('检测到旧版存档。确定要读取吗？当前未保存的进度将被覆盖。')) {
+                                    // 修复：先清空角色列表，防止残留
+                                    characters.value = [];
+
                                     if (data.rawScript !== undefined) rawScript.value = data.rawScript;
                                     if (data.rawAnalysisResult !== undefined) rawAnalysisResult.value = data.rawAnalysisResult;
                                     
@@ -2657,7 +2710,13 @@
                                     scriptLines.value = restoredLines;
                                     
                                     exportStatus.value = '保存中...';
-                                    if (assetsToSave.length > 0) await saveAssetsBatch(assetsToSave);
+                                    if (assetsToSave.length > 0) {
+                                        try {
+                                            await saveAssetsBatch(assetsToSave);
+                                        } catch (e) {
+                                            console.error("Asset save failed:", e);
+                                        }
+                                    }
                                     await saveProjectToDB();
                                     alert('存档读取成功！');
                                 }
@@ -3675,14 +3734,39 @@
                 const savePrompt = () => {
                     localStorage.setItem('storyforge_prompt_template', customPromptTemplate.value);
                     localStorage.setItem('storyforge_use_custom_prompt', JSON.stringify(useCustomPrompt.value));
+                    localStorage.setItem('storyforge_voice_prompt_template', customVoicePromptTemplate.value);
+                    localStorage.setItem('storyforge_use_custom_voice_prompt', JSON.stringify(useCustomVoicePrompt.value));
                     alert('Prompt 设置已保存');
+                };
+
+                const saveVoicePrompt = () => {
+                    localStorage.setItem('storyforge_voice_prompt_template', customVoicePromptTemplate.value);
+                    localStorage.setItem('storyforge_use_custom_voice_prompt', JSON.stringify(useCustomVoicePrompt.value));
+                    alert('音色分析 Prompt 设置已保存');
                 };
 
                 const resetPrompt = () => {
                     if(confirm('确定要恢复默认 Prompt 吗？')) {
                         customPromptTemplate.value = defaultPromptTemplate;
+                        customVoicePromptTemplate.value = defaultVoicePromptTemplate;
                     }
                 };
+
+                const resetVoicePrompt = () => {
+                    if(confirm('确定要恢复默认的音色分析 Prompt 吗？')) {
+                        customVoicePromptTemplate.value = defaultVoicePromptTemplate;
+                        localStorage.setItem('storyforge_voice_prompt_template', defaultVoicePromptTemplate);
+                    }
+                };
+
+                // 监听开关状态，实时保存
+                watch(useCustomPrompt, (newVal) => {
+                    localStorage.setItem('storyforge_use_custom_prompt', JSON.stringify(newVal));
+                });
+                
+                watch(useCustomVoicePrompt, (newVal) => {
+                    localStorage.setItem('storyforge_use_custom_voice_prompt', JSON.stringify(newVal));
+                });
 
                 return { 
                     // State
@@ -3746,6 +3830,7 @@
                     playScriptSequentially, stopScriptSequentially, isSequencePlaying, currentSequenceIndex,
 
                     customPromptTemplate, useCustomPrompt, savePrompt, resetPrompt,
+                    customVoicePromptTemplate, useCustomVoicePrompt, saveVoicePrompt, resetVoicePrompt,
                 };
             }
         }).mount('#app');
