@@ -40,8 +40,6 @@ Fork云原生仓库后，即可点击按钮在线启动部署，启动后，在�
 
 使用资源调度管理脚本，实现在同一个云原生工程内共存两个模型。
 
-Api接口务必使用 https://cnb.cool/ConyStudio/index-tts-v2 的api.py写的接口定义规范，不然不能正常调用。
-
 ### LLM使用OpenAI通用接口
 LLM支持使用各种支持OpenAI通用接口的大模型。
 
