@@ -29,7 +29,7 @@ https://www.bilibili.com/video/BV1jYkGBqEkL
 
 https://sdsds222.github.io/Unitale/
 
-现已支持台词剪辑和优化编辑器保存功能。
+现已支持音色自动分析生成功能，基于llm分析剧情，产生角色音色描述文本，再利用描述文本使用qwen3tts生成音色参考音频。
 
 ### IndexTTS 2 免费云原生项目：
 最新：https://cnb.cool/ConyStudio/IndexTTS2-Qwen3VoiceDesign
@@ -37,6 +37,8 @@ https://sdsds222.github.io/Unitale/
 ~~旧版：https://cnb.cool/ConyStudio/index-tts-v2~~
 
 Fork云原生仓库后，即可点击按钮在线启动部署，启动后，在前端TTS配置界面输入云原生项目的port里面的Ip地址即可调用。
+
+使用资源调度管理脚本，实现在同一个云原生工程内共存两个模型。
 
 Api接口务必使用 https://cnb.cool/ConyStudio/index-tts-v2 的api.py写的接口定义规范，不然不能正常调用。
 
