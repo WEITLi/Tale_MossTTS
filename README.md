@@ -9,6 +9,8 @@
 
 先看使用教程：https://www.bilibili.com/video/BV1KSzWByEy7
 
+语音智能合成效果演示：https://www.bilibili.com/video/BV1Nvc7zjEd1
+
 界面简洁，使用简单，能够一键生成，用户可以对生成的音频内容进行微调。
 
 ![主界面截图](界面图2.png)
