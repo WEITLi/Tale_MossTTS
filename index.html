@@ -783,6 +783,28 @@
                 <div class="mt-2 text-xs text-slate-500">
                     <span class="font-bold">可用变量:</span> ${charName}, ${rawScript}
                 </div>
+
+                <hr class="my-6 border-slate-200">
+
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-sm font-bold text-slate-600">3. Qwen 音色生成参考音频 文本模板</h4>
+                    <div class="space-x-2">
+                        <button @click="saveQwenVoiceText" class="px-3 py-1.5 bg-pink-100 text-pink-700 rounded-lg text-xs font-bold hover:bg-pink-200 transition-all">保存生成文本</button>
+                        <button @click="resetQwenVoiceText" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition-all">恢复默认</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 mb-4 bg-white p-3 rounded-lg border border-slate-200">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" v-model="useCustomQwenVoiceText" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm font-bold text-slate-700">启用自定义生成文本</span>
+                    </label>
+                    <span class="text-xs text-slate-400 ml-2">(关闭时将使用系统内置的默认文本)</span>
+                </div>
+                <textarea v-model="customQwenVoiceTextTemplate" :disabled="!useCustomQwenVoiceText" :class="['w-full h-24 p-3 text-xs font-mono border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-3', !useCustomQwenVoiceText ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-700']" spellcheck="false"></textarea>
+                <div class="mt-2 text-xs text-slate-500">
+                    <span class="font-bold">可用变量:</span> ${charName}
+                </div>
             </div>
         </div>
 
@@ -1168,6 +1190,10 @@
                 const customVoicePromptTemplate = ref(defaultVoicePromptTemplate);
                 const useCustomVoicePrompt = ref(false);
 
+                const defaultQwenVoiceTextTemplate = "我是${char.name}，初次见面，请多多指教。正在进行声线校准测试，一，二，三。这段音频将作为我的基准音色，希望能完美演绎接下来的故事，请多关照。";
+                const customQwenVoiceTextTemplate = ref(defaultQwenVoiceTextTemplate);
+                const useCustomQwenVoiceText = ref(false);
+
                 // --- 音频引擎与缓存 (Audio Engine & Cache) ---
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const audioBufferCache = new Map();
@@ -1369,6 +1395,15 @@
                     const savedUseCustomVoice = localStorage.getItem('storyforge_use_custom_voice_prompt');
                     if (savedUseCustomVoice) {
                         useCustomVoicePrompt.value = JSON.parse(savedUseCustomVoice);
+                    }
+
+                    const savedQwenText = localStorage.getItem('storyforge_qwen_voice_text_template');
+                    if (savedQwenText) {
+                        customQwenVoiceTextTemplate.value = savedQwenText;
+                    }
+                    const savedUseCustomQwen = localStorage.getItem('storyforge_use_custom_qwen_voice_text');
+                    if (savedUseCustomQwen) {
+                        useCustomQwenVoiceText.value = JSON.parse(savedUseCustomQwen);
                     }
 
                     // --- Restore from IndexedDB ---
@@ -1606,9 +1641,12 @@
                         let baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
                         if (baseUrl.endsWith('/v1')) baseUrl = baseUrl.slice(0, -3);
                         
+                        const template = useCustomQwenVoiceText.value ? customQwenVoiceTextTemplate.value : defaultQwenVoiceTextTemplate;
+                        const textToUse = template.replace(/\${charName}/g, char.name);
+
                         const payload = {
                             voice_description: char.voiceDescription,
-                            text: `我是${char.name}，这是根据描述生成的参考音色，初次见面，请多多关照。`
+                            text: textToUse
                         };
 
                         // 1. 调用 Qwen3 生成音频
@@ -3761,6 +3799,18 @@
                     }
                 };
 
+                const saveQwenVoiceText = () => {
+                    localStorage.setItem('storyforge_qwen_voice_text_template', customQwenVoiceTextTemplate.value);
+                    localStorage.setItem('storyforge_use_custom_qwen_voice_text', JSON.stringify(useCustomQwenVoiceText.value));
+                    alert('Qwen 生成文本设置已保存');
+                };
+
+                const resetQwenVoiceText = () => {
+                    if(confirm('确定要恢复默认文本吗？')) {
+                        customQwenVoiceTextTemplate.value = defaultQwenVoiceTextTemplate;
+                    }
+                };
+
                 // 监听开关状态，实时保存
                 watch(useCustomPrompt, (newVal) => {
                     localStorage.setItem('storyforge_use_custom_prompt', JSON.stringify(newVal));
@@ -3768,6 +3818,10 @@
                 
                 watch(useCustomVoicePrompt, (newVal) => {
                     localStorage.setItem('storyforge_use_custom_voice_prompt', JSON.stringify(newVal));
+                });
+
+                watch(useCustomQwenVoiceText, (newVal) => {
+                    localStorage.setItem('storyforge_use_custom_qwen_voice_text', JSON.stringify(newVal));
                 });
 
                 return { 
@@ -3833,6 +3887,7 @@
 
                     customPromptTemplate, useCustomPrompt, savePrompt, resetPrompt,
                     customVoicePromptTemplate, useCustomVoicePrompt, saveVoicePrompt, resetVoicePrompt,
+                    customQwenVoiceTextTemplate, useCustomQwenVoiceText, saveQwenVoiceText, resetQwenVoiceText,
                 };
             }
         }).mount('#app');
