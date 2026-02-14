@@ -33,6 +33,10 @@ https://sdsds222.github.io/Unitale/
 
 现已支持音色自动分析生成功能，基于llm分析剧情，产生角色音色描述文本，再利用描述文本使用qwen3tts生成音色参考音频。
 
+初始资源包（含音色、音效、BGM等素材）：
+
+【请解压后再导入工程！】下载地址：https://wwazp.lanzouw.com/i9S4t3ihazba
+
 ### IndexTTS 2 免费云原生项目：
 最新：https://cnb.cool/ConyStudio/IndexTTS2-Qwen3VoiceDesign
 
@@ -49,6 +53,7 @@ LLM支持使用各种支持OpenAI通用接口的大模型。
 
 
 ### 音频资源整合包
+下载地址（请解压后再导入工程）：https://wwazp.lanzouw.com/i9S4t3ihazba
 可以在编辑界面点击保存工程按钮，能够保存音色、音效、BGM、滤波器和脚本编辑工作台的所有信息，一定要记得经常保存，页面清空后可以用存档文件恢复所有工作状态。
 
 新手可以先使用制作好的初始工程整合包，里面提供了基础的音色、音效、BGM供使用，在本项目目录里，Unitale工程文件.json
