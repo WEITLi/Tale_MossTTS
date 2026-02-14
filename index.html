@@ -1190,7 +1190,7 @@
                 const customVoicePromptTemplate = ref(defaultVoicePromptTemplate);
                 const useCustomVoicePrompt = ref(false);
 
-                const defaultQwenVoiceTextTemplate = "我是${char.name}，初次见面，请多多指教。正在进行声线校准测试，一，二，三。这段音频将作为我的基准音色，希望能完美演绎接下来的故事，请多关照。";
+                const defaultQwenVoiceTextTemplate = "我是${charName}，初次见面，请多多指教。正在进行声线校准测试，一，二，三。这段音频将作为我的基准音色，希望能完美演绎接下来的故事，请多关照。";
                 const customQwenVoiceTextTemplate = ref(defaultQwenVoiceTextTemplate);
                 const useCustomQwenVoiceText = ref(false);
 
@@ -1642,7 +1642,7 @@
                         if (baseUrl.endsWith('/v1')) baseUrl = baseUrl.slice(0, -3);
                         
                         const template = useCustomQwenVoiceText.value ? customQwenVoiceTextTemplate.value : defaultQwenVoiceTextTemplate;
-                        const textToUse = template.replace(/\${charName}/g, char.name);
+                        const textToUse = template.replace(/\${charName}/g, char.name).replace(/\${char\.name}/g, char.name);
 
                         const payload = {
                             voice_description: char.voiceDescription,
