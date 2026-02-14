@@ -37,6 +37,8 @@ https://sdsds222.github.io/Unitale/
 
 【请解压后再导入工程！】下载地址：https://wwazp.lanzouw.com/i9S4t3ihazba
 
+或者直接下载本仓库的初始工程文件，如果网速允许的话。
+
 ### IndexTTS 2 免费云原生项目：
 最新：https://cnb.cool/ConyStudio/IndexTTS2-Qwen3VoiceDesign
 
