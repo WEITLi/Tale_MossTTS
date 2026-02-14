@@ -786,8 +786,9 @@
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-sm font-bold text-slate-700">2. 脚本台词列表 ({{ scriptLines.length }} 行)</h3>
                     </div>
-                    <div class="space-y-3 max-h-[600px] overflow-y-auto px-2 pb-10">
+                    <div ref="scriptListContainer" class="space-y-3 max-h-[600px] overflow-y-auto px-2 pb-10">
                         <div v-for="(line, index) in scriptLines" :key="line.id" @click="toggleLineSelection(index)"
+                            :ref="el => { if (el) lineRefs[index] = el }"
                             class="transition-all duration-200">
 
                             <!-- BGM 控制块 -->
@@ -1182,7 +1183,7 @@
     </div>
 
     <script>
-        const { createApp, ref, onMounted, computed, watch } = Vue;
+        const { createApp, ref, onMounted, computed, watch, onBeforeUpdate } = Vue;
 
         createApp({
             setup() {
@@ -1439,6 +1440,11 @@
                 const isGeneratingAll = ref(false);
                 const isSequencePlaying = ref(false);
                 const currentSequenceIndex = ref(-1);
+                const lineRefs = ref([]);
+                const scriptListContainer = ref(null);
+                onBeforeUpdate(() => {
+                    lineRefs.value = [];
+                });
                 let sequenceAbortController = null;
                 const isExportingAudio = ref(false);
                 const importFileRef = ref(null);
@@ -3939,10 +3945,51 @@
                     isSequencePlaying.value = true;
                     const startIndex = selectedLineIndex.value !== -1 ? selectedLineIndex.value : 0;
 
+                    // --- BGM Pre-scan Logic ---
+                    if (startIndex > 0) {
+                        // Find the last BGM directive before the start index.
+                        let lastBgmLine = null;
+                        for (let i = startIndex - 1; i >= 0; i--) {
+                            const line = scriptLines.value[i];
+                            if (line.type === 'bgm') {
+                                lastBgmLine = line;
+                                break; // Found the last one, no need to look further back.
+                            }
+                        }
+
+                        // If the last directive was to play a BGM, play it now.
+                        // If it was 'stop' or null, we do nothing, as stopScriptSequentially() already handled it.
+                        if (lastBgmLine && lastBgmLine.action === 'play') {
+                            await playBgm(lastBgmLine.bgmName, lastBgmLine.volume);
+                        }
+                    }
+                    // --- End BGM Pre-scan ---
+
                     for (let i = startIndex; i < scriptLines.value.length; i++) {
                         if (!isSequencePlaying.value) break; // Check if stopped
 
                         currentSequenceIndex.value = i;
+
+                        // Scroll into view manually to prevent page scroll
+                        const container = scriptListContainer.value;
+                        const child = lineRefs.value[i];
+
+                        if (container && child) {
+                            const containerRect = container.getBoundingClientRect();
+                            const childRect = child.getBoundingClientRect();
+
+                            // The offset of the child relative to the container's top edge
+                            const childOffsetTop = childRect.top - containerRect.top;
+                            
+                            // The desired scrollTop to center the child
+                            const newScrollTop = container.scrollTop + childOffsetTop - (container.clientHeight / 2) + (child.clientHeight / 2);
+
+                            container.scrollTo({
+                                top: newScrollTop,
+                                behavior: 'smooth'
+                            });
+                        }
+
                         const line = scriptLines.value[i];
 
                         if (line.type === 'bgm') {
@@ -4516,6 +4563,8 @@
                     exportSRT, triggerImportTxt, handleImportTxt, importTxtRef,
                     isExportingProject, exportStatus,
                     playScriptSequentially, stopScriptSequentially, isSequencePlaying, currentSequenceIndex,
+                    lineRefs,
+                    scriptListContainer,
 
                     customPromptTemplate, useCustomPrompt, savePrompt, resetPrompt,
                     customVoicePromptTemplate, useCustomVoicePrompt, saveVoicePrompt, resetVoicePrompt,
