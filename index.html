@@ -787,7 +787,7 @@
                         <h3 class="text-sm font-bold text-slate-700">2. 脚本台词列表 ({{ scriptLines.length }} 行)</h3>
                     </div>
                     <div ref="scriptListContainer" class="space-y-3 max-h-[600px] overflow-y-auto px-2 pb-10">
-                        <div v-for="(line, index) in scriptLines" :key="line.id" @click="toggleLineSelection(index)"
+                        <div v-for="(line, index) in scriptLines" :key="line.id" @click="toggleLineSelection(index, $event)"
                             :ref="el => { if (el) lineRefs[index] = el }"
                             class="transition-all duration-200">
 
@@ -2512,7 +2512,12 @@
                     scriptLines.value.splice(index + 1, 0, item);
                 };
 
-                const toggleLineSelection = (index) => {
+                const toggleLineSelection = (index, event) => {
+                    if (event) {
+                        // 如果点击的是交互式控件（输入框、按钮、下拉框等）或其内部元素，则不切换选中状态
+                        const interactive = event.target.closest('input, select, textarea, button, label, a');
+                        if (interactive) return;
+                    }
                     if (selectedLineIndex.value === index) {
                         selectedLineIndex.value = -1;
                     } else {
