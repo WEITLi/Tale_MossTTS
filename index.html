@@ -929,6 +929,14 @@
                                                         step="0.05"
                                                         class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 block">
                                                 </div>
+                                                <div class="w-full">
+                                                    <div class="flex justify-between items-center mb-0.5">
+                                                        <span class="text-[8px] font-bold text-slate-400 uppercase">语速</span>
+                                                        <span class="text-[8px] text-slate-400 font-mono">{{ (line.speed || 1).toFixed(1) }}x</span>
+                                                    </div>
+                                                    <input type="range" v-model.number="line.speed" min="0.5" max="2" step="0.1"
+                                                        class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-green-600 block">
+                                                </div>
                                             </div>
 
                                             <!-- 音频波形剪辑条 -->
@@ -2893,6 +2901,7 @@
                             const duration = dialogueBuffer.duration;
                             const startTimeOffset = duration * trimStart;
                             const playDuration = duration * (trimEnd - trimStart);
+                            const speed = line.speed || 1.0;
 
                             const dialogueGain = audioContext.createGain();
                             dialogueGain.gain.setValueAtTime(line.dialogueVolume ?? 1.0, audioContext.currentTime);
@@ -2922,6 +2931,7 @@
 
                             // Connect to gain then destination
                             lastNode.connect(dialogueGain).connect(audioContext.destination);
+                            dialogueSource.playbackRate.value = speed;
 
                             const now = audioContext.currentTime + 0.05; // Slight delay for sync
 
@@ -2941,7 +2951,7 @@
                                     sSrc.connect(sGain).connect(audioContext.destination);
 
                                     const relativeStart = absSfxTime - absStart;
-                                    sSrc.start(now + relativeStart);
+                                    sSrc.start(now + relativeStart / speed);
 
                                     sfxSources.push(sSrc);
                                     sSrc.onended = () => {
@@ -2976,13 +2986,13 @@
                                     // startTimeOffset = duration * trimStart
                                     // => (duration * trimStart + elapsed) / duration
                                     // => trimStart + (elapsed / duration)
-                                    const progress = trimStart + (elapsed / duration);
+                                    const progress = trimStart + (elapsed * speed / duration);
                                     playbackProgress.value = Math.min(progress, trimEnd);
                                 } else {
                                     playbackProgress.value = trimStart;
                                 }
 
-                                if (audioContext.currentTime < now + playDuration) {
+                                if (audioContext.currentTime < now + (playDuration / speed)) {
                                     playbackAnimationFrame = requestAnimationFrame(updateProgress);
                                 } else {
                                     playbackProgress.value = trimEnd;
@@ -3294,6 +3304,7 @@
                                             // 优化：收集到批量列表
                                             assetsToSave.push({ key: `line_audio_${line.id}`, blob: blob });
 
+                                    if (line.speed === undefined) line.speed = 1.0; // Ensure speed exists for old saves
                                             line.audioUrl = URL.createObjectURL(blob);
                                             delete line.audioBase64; // 清理内存
                                         } catch (err) { console.warn('Audio restore failed', err); }
@@ -3472,11 +3483,13 @@
                                     const trimStart = line.trimStart || 0;
                                     const trimEnd = line.trimEnd || 1;
                                     const playDuration = buffer.duration * (trimEnd - trimStart);
+                                    const speed = line.speed || 1.0;
+                                    const effectiveDuration = playDuration / speed;
 
                                     // 模拟 playLineAudio 中的 0.05s 调度延迟，确保导出节奏与实时播放一致
                                     currentTime += 0.05;
-                                    events.push({ type: 'dialogue', time: currentTime, buffer: buffer, line: line, trimStart, trimEnd, playDuration });
-                                    currentTime += playDuration;
+                                    events.push({ type: 'dialogue', time: currentTime, buffer: buffer, line: line, trimStart, trimEnd, playDuration, speed });
+                                    currentTime += effectiveDuration;
                                 }
                                 currentTime += (line.break_duration || 0);
                             }
@@ -3509,6 +3522,7 @@
                         events.forEach(evt => {
                             const dSrc = offlineCtx.createBufferSource();
                             dSrc.buffer = evt.buffer;
+                            dSrc.playbackRate.value = evt.speed;
                             const dGain = offlineCtx.createGain();
                             dGain.gain.value = evt.line.dialogueVolume ?? 1.0;
 
@@ -3558,7 +3572,7 @@
                                             sSrc.connect(sGain).connect(offlineCtx.destination);
 
                                             const relativeStart = absSfxTime - absStart;
-                                            sSrc.start(evt.time + relativeStart);
+                                            sSrc.start(evt.time + relativeStart / evt.speed);
                                         }
                                     }
                                 });
@@ -3680,7 +3694,7 @@
                                     const trimStart = line.trimStart || 0;
                                     const trimEnd = line.trimEnd || 1;
                                     const duration = buffer.duration * (trimEnd - trimStart);
-                                    const totalDuration = duration;
+                                    const totalDuration = duration / (line.speed || 1.0);
 
                                     const startTime = currentTime + 0.05; // 对应 exportAudio 的 0.05s 偏移
 
@@ -3794,6 +3808,7 @@
                         trimEnd: 1,
                         sfxVolume: 0.5,
                         dialogueVolume: 1.0,
+                        speed: 1.0,
                         audioUrl: '',
                         isGenerating: false
                     }));
@@ -3831,6 +3846,7 @@
                         break_duration: 0,
                         sfxVolume: 0.5,
                         dialogueVolume: 1.0,
+                        speed: 1.0,
                         audioUrl: '',
                         isGenerating: false
                     };
