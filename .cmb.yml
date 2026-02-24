@@ -15,7 +15,7 @@ $:
       env:
         # 声明首次打开终端时自动执行的命令，支持多行文本
         CNB_WELCOME_CMD: |
-          echo "hello workd"
+          echo "hello"
           bash start.sh
       stages:
         - name: start

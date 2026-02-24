@@ -2,10 +2,9 @@
 set -e
 
 # 路径定义
-VENV_PYTHON="/app/index-tts/.venv/bin/python3"
-QWEN_LIBS="/app/qwen_libs"
-INDEX_DIR="/app/index-tts"
-WORKSPACE_API="/workspace/api.py"
+VENV_PYTHON="./index-tts/.venv/bin/python3"
+QWEN_LIBS="./qwen_libs"
+INDEX_DIR="."
 
 echo "=================================================="
 echo "   Unitale AI后端服务 IndexTTS2 + Qwen3-TTS VoiceDesign"
@@ -51,7 +50,7 @@ if [ ! -d "$QWEN_LIBS" ]; then
 fi
 
 # (C) 侧载环境 - MOSS-TTS
-MOSS_LIBS="/app/moss_libs"
+MOSS_LIBS="./moss_libs"
 if [ ! -d "$MOSS_LIBS" ]; then
     echo "   -> 安装 MOSS-TTS 侧载依赖..."
     mkdir -p "$MOSS_LIBS"
@@ -60,18 +59,10 @@ if [ ! -d "$MOSS_LIBS" ]; then
 fi
 
 # 4. 启动常驻服务
-echo "[4/4] 正在同步代码并启动..."
+echo "[4/4] 启动服务..."
 echo "--------------------------------------------------"
 
-if [ -f "$WORKSPACE_API" ]; then
-    echo "   -> 代码同步: /workspace/api.py -> 运行目录"
-    cp -f "$WORKSPACE_API" "$INDEX_DIR/api.py"
-else
-    echo "   ⚠️ 警告: 未找到新代码，使用旧版运行"
-fi
-
-cd "$INDEX_DIR"
-export PYTHONPATH="/app/qwen3-voicedesign/Qwen3-TTS:$INDEX_DIR"
+export PYTHONPATH="./Qwen3-TTS:."
 # 针对 L40 显卡加速编译
 export TORCH_CUDA_ARCH_LIST="8.9"
 

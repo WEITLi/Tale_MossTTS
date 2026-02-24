@@ -12,13 +12,13 @@ import queue
 # ==========================================
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True,max_split_size_mb:128"
 
-QWEN_LIBS = os.environ.get("QWEN_LIBS", "../qwen_libs")
-QWEN_MODEL = "../models/Qwen3-TTS-12Hz-1.7B-VoiceDesign"
+QWEN_LIBS = os.environ.get("QWEN_LIBS", "./qwen_libs")
+QWEN_MODEL = "./models/Qwen3-TTS-12Hz-1.7B-VoiceDesign"
 
 # MOSS 模型配置 (侧载目录)
-MOSS_LIBS = os.environ.get("MOSS_LIBS", "/app/moss_libs")
-MOSS_VOICE_MODEL = os.environ.get("MOSS_VOICE_MODEL", "../models/MOSS-VoiceGenerator")
-MOSS_SFX_MODEL = os.environ.get("MOSS_SFX_MODEL", "../models/MOSS-SoundEffect")
+MOSS_LIBS = os.environ.get("MOSS_LIBS", "./moss_libs")
+MOSS_VOICE_MODEL = os.environ.get("MOSS_VOICE_MODEL", "./models/MOSS-VoiceGenerator")
+MOSS_SFX_MODEL = os.environ.get("MOSS_SFX_MODEL", "./models/MOSS-SoundEffect")
 MOSS_DEVICE = os.environ.get("MOSS_DEVICE", "cuda:0")
 
 PROMPTS_DIR = os.path.abspath("prompts")
@@ -52,7 +52,7 @@ def qwen_daemon(input_q, output_q):
     try:
         sys.path.insert(0, QWEN_LIBS)
         # 将用户的 Qwen3-TTS 库路径加入
-        qwen_repo_path = "../../Qwen3-TTS"
+        qwen_repo_path = "./Qwen3-TTS"
         if qwen_repo_path not in sys.path:
             sys.path.insert(0, qwen_repo_path)
             
@@ -308,13 +308,13 @@ class ModelManager:
         print("[启动] 正在载入 IndexTTS2...")
         
         # 将用户的 index-tts 路径加入 sys.path
-        indextts_repo_path = "../../index-tts"
+        indextts_repo_path = "./index-tts"
         if indextts_repo_path not in sys.path:
             sys.path.insert(0, indextts_repo_path)
             
         from indextts.infer_v2 import IndexTTS2
         
-        indextts_model_dir = "../models/IndexTTS-2"
+        indextts_model_dir = "./models/IndexTTS-2"
         self.indextts = IndexTTS2(
             model_dir=indextts_model_dir,
             cfg_path=os.path.join(indextts_model_dir, "config.yaml")
