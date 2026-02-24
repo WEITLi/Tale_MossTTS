@@ -1,5 +1,6 @@
-import io, os, gc, torch, hashlib, traceback, uvicorn, sys, multiprocessing, time, subprocess
+import io, os, gc, torch, hashlib, traceback, uvicorn, sys, multiprocessing, time, subprocess, json
 import soundfile as sf
+import numpy as np
 from typing import Optional, List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Response
 from fastapi.responses import JSONResponse
@@ -20,6 +21,13 @@ MOSS_LIBS = os.environ.get("MOSS_LIBS", "./moss_libs")
 MOSS_VOICE_MODEL = os.environ.get("MOSS_VOICE_MODEL", "./models/MOSS-VoiceGenerator")
 MOSS_SFX_MODEL = os.environ.get("MOSS_SFX_MODEL", "./models/MOSS-SoundEffect")
 MOSS_DEVICE = os.environ.get("MOSS_DEVICE", "cuda:0")
+
+# 轻量级情感预测模型配置
+EMOTION_MODEL_DIR = os.environ.get("EMOTION_MODEL_DIR", "./sft/emotion_model_output/final")
+EMOTION_LLM_API_KEY = os.environ.get("EMOTION_LLM_API_KEY", "")       # LLM回退模式的API Key
+EMOTION_LLM_BASE_URL = os.environ.get("EMOTION_LLM_BASE_URL", "")     # LLM回退模式的BaseURL
+EMOTION_LLM_MODEL = os.environ.get("EMOTION_LLM_MODEL", "deepseek-chat")  # LLM回退模式的模型名
+EMOTION_DIMS = ["高兴", "愤怒", "悲伤", "恐惧", "反感", "低落", "惊讶", "平静"]
 
 PROMPTS_DIR = os.path.abspath("prompts")
 os.makedirs(PROMPTS_DIR, exist_ok=True)
@@ -546,6 +554,142 @@ async def moss_sfx_generate(request: MossSfxRequest):
             manager.unload_moss_sfx()
             raise HTTPException(status_code=500, detail="MOSS SFX 推理超时")
 
+# ==========================================
+# 4. 情感预测接口
+# ==========================================
+class EmotionPredictRequest(BaseModel):
+    context: str = ""         # 上文语境 (滑动窗口截断后的最近N行)
+    current_line: str         # 当前要合成的台词
+    prior_emotion: str = ""   # 前端LLM初选的主情绪标签 (可选)
+
+# 全局缓存：轻量级本地模型 (延迟加载)
+_emotion_tokenizer = None
+_emotion_model = None
+
+def _load_local_emotion_model():
+    """尝试加载本地微调好的 RoBERTa 情感回归模型"""
+    global _emotion_tokenizer, _emotion_model
+    if _emotion_model is not None:
+        return True
+    if not os.path.isdir(EMOTION_MODEL_DIR):
+        return False
+    try:
+        from transformers import AutoTokenizer, AutoModelForSequenceClassification
+        print(f"[情感模型] 正在从 {EMOTION_MODEL_DIR} 加载轻量级情感模型...")
+        _emotion_tokenizer = AutoTokenizer.from_pretrained(EMOTION_MODEL_DIR)
+        _emotion_model = AutoModelForSequenceClassification.from_pretrained(EMOTION_MODEL_DIR)
+        _emotion_model.eval()
+        # 尝试用 CPU 推理 (极快)
+        _emotion_model.to("cpu")
+        print("[情感模型] ✅ 本地模型加载完成 (CPU)")
+        return True
+    except Exception as e:
+        print(f"[情感模型] ⚠️ 本地模型加载失败: {e}，将使用 LLM API 回退")
+        _emotion_model = None
+        _emotion_tokenizer = None
+        return False
+
+def _predict_local(context: str, current_line: str, prior_emotion: str) -> List[float]:
+    """使用本地 RoBERTa 模型推理 8 维向量"""
+    text = f"背景:{context} 主情绪:{prior_emotion} [SEP] 台词:{current_line}"
+    inputs = _emotion_tokenizer(
+        text, max_length=256, padding="max_length",
+        truncation=True, return_tensors="pt"
+    )
+    with torch.no_grad():
+        outputs = _emotion_model(**inputs)
+    logits = outputs.logits[0].tolist()
+    # 裁剪到 0~1 并归一化
+    clipped = [max(0.0, min(1.0, v)) for v in logits]
+    total = sum(clipped)
+    if total > 0:
+        return [round(v / total, 4) for v in clipped]
+    return [0.0] * 7 + [1.0]
+
+async def _predict_llm_fallback(context: str, current_line: str, prior_emotion: str) -> List[float]:
+    """使用 LLM API 作为回退方案 (适用于尚未微调本地模型时)"""
+    import aiohttp
+    
+    system_prompt = """你是一个极其敏锐的人类情感心理分析专家。
+请阅读剧本上下文，重点分析【目标台词】说话人的即时情感状态。
+请严格输出一个包含 8 个情感维度的概率分布 JSON。
+这 8 个维度是：["高兴", "愤怒", "悲伤", "恐惧", "反感", "低落", "惊讶", "平静"]。
+数字必须是 0.0 到 1.0 之间的小数，且总和必须等于 1.0。
+只输出合法的 JSON 对象，不要包含任何其他文字或 Markdown 标记。"""
+    
+    user_prompt = f"""上文语境：{context}
+
+前端初步识别的主情绪：[{prior_emotion}]
+
+【目标台词】{current_line}
+
+请给出 8 维情感概率分布 JSON："""
+    
+    payload = {
+        "model": EMOTION_LLM_MODEL,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        "temperature": 0.3
+    }
+    headers = {
+        "Authorization": f"Bearer {EMOTION_LLM_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            f"{EMOTION_LLM_BASE_URL}/chat/completions",
+            json=payload, headers=headers, timeout=30
+        ) as resp:
+            if resp.status != 200:
+                raise HTTPException(status_code=502, detail=f"LLM API 错误: {resp.status}")
+            data = await resp.json()
+            content = data["choices"][0]["message"]["content"]
+            content = content.replace("```json", "").replace("```", "").strip()
+            emotion_dict = json.loads(content)
+            
+            vector = []
+            for dim in EMOTION_DIMS:
+                vector.append(float(emotion_dict.get(dim, 0.0)))
+            total = sum(vector)
+            if total > 0:
+                return [round(v / total, 4) for v in vector]
+            return [0.0] * 7 + [1.0]
+
+@app.post("/v2/predict_emotion")
+async def predict_emotion(request: EmotionPredictRequest):
+    """上下文感知的情感向量预测接口
+    
+    优先使用本地微调的轻量级模型 (RoBERTa, ~3ms, CPU);
+    如果本地模型不存在，回退到 LLM API (需要配置 EMOTION_LLM_* 环境变量)。
+    """
+    try:
+        # 优先尝试本地模型
+        if _load_local_emotion_model():
+            vector = _predict_local(request.context, request.current_line, request.prior_emotion)
+            return {"emotion_vector": vector, "mode": "local", "dims": EMOTION_DIMS}
+        
+        # 回退到 LLM API
+        if EMOTION_LLM_API_KEY and EMOTION_LLM_BASE_URL:
+            vector = await _predict_llm_fallback(request.context, request.current_line, request.prior_emotion)
+            return {"emotion_vector": vector, "mode": "llm_fallback", "dims": EMOTION_DIMS}
+        
+        # 都不可用，返回默认平静向量
+        return {
+            "emotion_vector": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            "mode": "default",
+            "dims": EMOTION_DIMS,
+            "warning": "未配置本地模型或 LLM API，返回默认平静向量"
+        }
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"情感预测失败: {str(e)}")
+
+# ==========================================
+# 5. TTS 合成接口
+# ==========================================
 @app.post("/v2/synthesize")
 async def synthesize_v2(request: TextToSpeechRequest):
     manager.unload_qwen()

@@ -821,6 +821,18 @@
                             停止播放
                         </button>
                         <div class="flex-grow"></div>
+                        <!-- 上下文情绪感知开关 -->
+                        <label class="flex items-center gap-2 cursor-pointer select-none ml-2"
+                            title="启用后，合成前会自动分析上下文语境来预测更平滑自然的情绪">
+                            <div class="relative">
+                                <input type="checkbox" v-model="useAutoEmotion" class="sr-only peer">
+                                <div
+                                    class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-violet-500">
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold"
+                                :class="useAutoEmotion ? 'text-violet-600' : 'text-gray-400'">🧠 智能情绪</span>
+                        </label>
                     </div>
                 </div>
 
@@ -1616,6 +1628,7 @@
                 const analysisAbortController = ref(null);
                 const selectedLineIndex = ref(-1);
                 const isGeneratingAll = ref(false);
+                const useAutoEmotion = ref(false); // 上下文情绪感知开关
                 const isSequencePlaying = ref(false);
                 const currentSequenceIndex = ref(-1);
                 const lineRefs = ref([]);
@@ -3169,6 +3182,58 @@
                                 finalVector = preset.vector;
                             }
                         }
+
+                        // ========== 上下文情绪感知 ==========
+                        if (useAutoEmotion.value) {
+                            try {
+                                // 提取滑动窗口上下文：当前台词往上倒推最多 5 行，截断到 200 字
+                                const currentIdx = scriptLines.value.findIndex(l => l.id === line.id);
+                                let contextParts = [];
+                                if (currentIdx > 0) {
+                                    const startIdx = Math.max(0, currentIdx - 5);
+                                    for (let i = startIdx; i < currentIdx; i++) {
+                                        const prev = scriptLines.value[i];
+                                        if (prev.type === 'bgm') continue;
+                                        const prefix = prev.role ? `${prev.role}：` : '（旁白）';
+                                        contextParts.push(prefix + prev.text);
+                                    }
+                                }
+                                let contextStr = contextParts.join('\n');
+                                // 从末尾截断到 200 字
+                                if (contextStr.length > 200) {
+                                    contextStr = '...' + contextStr.slice(-200);
+                                }
+
+                                const cfg = currentTtsConfig.value;
+                                let predictUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                                if (predictUrl.endsWith('/v1')) predictUrl = predictUrl.slice(0, -3);
+
+                                const emotionRes = await fetch(`${predictUrl}/v2/predict_emotion`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        context: contextStr,
+                                        current_line: (line.role ? line.role + '：' : '') + line.text,
+                                        prior_emotion: line.emotion || '平静'
+                                    }),
+                                    signal: internalSignal
+                                });
+
+                                if (emotionRes.ok) {
+                                    const emotionData = await emotionRes.json();
+                                    if (emotionData.emotion_vector && emotionData.emotion_vector.length === 8) {
+                                        finalVector = emotionData.emotion_vector;
+                                        console.log(`🧠 [智能情绪] ${line.role}: ${line.text.slice(0, 15)}... => [${finalVector.map(v => v.toFixed(2)).join(', ')}] (${emotionData.mode})`);
+                                    }
+                                }
+                            } catch (emotionErr) {
+                                if (emotionErr.name !== 'AbortError') {
+                                    console.warn('🧠 [智能情绪] 预测失败，回退到预设向量:', emotionErr.message);
+                                }
+                                // 预测失败时静默回退到原有的 preset 向量
+                            }
+                        }
+                        // ========== /上下文情绪感知 ==========
 
                         const payload = {
                             text: line.text,
@@ -5180,7 +5245,7 @@
                     rawScript, scriptLines, splitScript, removeScriptLine, autoResizeTextarea, analyzeScript, isAnalyzingScript, rawAnalysisResult,
                     addBgmBlock, addDialogueBlock, selectedLineIndex,
                     drawWaveform, startDragTrim, // Exported for template
-                    generateAllLines, isGeneratingAll, clearAllGeneratedAudio,
+                    generateAllLines, isGeneratingAll, useAutoEmotion, clearAllGeneratedAudio,
                     moveLineUp, moveLineDown,
                     toggleLineSelection,
                     exportScriptState, triggerImport, handleImportFile, importFileRef, exportAudio, isExportingAudio,
