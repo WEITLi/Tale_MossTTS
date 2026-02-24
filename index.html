@@ -69,10 +69,10 @@
     <div id="app" class="w-full max-w-[96%] mx-auto p-6 rounded-2xl shadow-2xl">
         <header class="mb-6 flex justify-between items-end">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">Unitale AI <span class="text-blue-600">1.3</span></h1>
+                <h1 class="text-2xl font-bold text-slate-800">Unitale AI <span class="text-blue-600">1.4</span></h1>
                 <p style="color: rgb(39, 92, 120);" class="text-slate-400 text-xs mt-1">多角色音效合成有声书生成工具</p>
             </div>
-            <div class="text-[10px] text-slate-300">v1.3</div>
+            <div class="text-[10px] text-slate-300">v1.4</div>
         </header>
 
         <!-- 标签页导航 -->
@@ -453,6 +453,37 @@
                     </div>
                     <div v-if="sfxLibrary.length === 0" class="text-center py-8 text-slate-400 text-sm">暂无音效素材</div>
                 </div>
+
+                <!-- AI 音效生成 (MOSS-SoundEffect) -->
+                <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-5 rounded-xl border border-indigo-200">
+                    <h3 class="text-sm font-bold text-indigo-700 mb-4">🤖 AI 音效生成 (MOSS-SoundEffect)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="md:col-span-3">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">音效描述</label>
+                            <textarea v-model="sfxGenForm.description" rows="2"
+                                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder="例如: 远处传来的雷鸣声伴着大雨落在金属屋顶上"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">时长 (秒)</label>
+                            <input type="number" v-model="sfxGenForm.duration" min="1" max="30" step="1"
+                                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder="5">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">音效名称 (保存用)</label>
+                            <input v-model="sfxGenForm.name"
+                                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder="例如: 雷雨声">
+                        </div>
+                        <div class="flex items-end">
+                            <button @click="generateSfxWithMoss" :disabled="isGeneratingSfx"
+                                class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                {{ isGeneratingSfx ? '⏳ 生成中...' : '🎵 AI 生成音效' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <section class="space-y-6 border-t border-slate-200 pt-6">
@@ -641,7 +672,12 @@
                             </div>
 
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">音色选择</label>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase">音色选择</label>
+                                    <button @click="openVoiceRecordModal(char)"
+                                        class="text-[10px] text-blue-500 hover:text-blue-700 font-bold flex items-center gap-1">🎤
+                                        录制/上传参考音频</button>
+                                </div>
                                 <div class="flex gap-1">
                                     <select v-model="char.voiceFile"
                                         class="flex-1 px-2 py-1.5 border rounded-md text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500">
@@ -676,11 +712,18 @@
                                 <div class="flex gap-1">
                                     <button @click="analyzeCharacterVoice(char)"
                                         :class="['flex-1 px-2 py-1.5 border rounded text-[10px] font-bold transition-colors flex justify-center items-center gap-1', char.isAnalyzing ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100']">
-                                        <span v-if="char.isAnalyzing" class="animate-spin">⏳</span>{{ char.isAnalyzing ? '停止分析' : 'AI分析音色' }}
+                                        <span v-if="char.isAnalyzing" class="animate-spin">⏳</span>{{ char.isAnalyzing ?
+                                        '停止分析' : 'AI分析音色' }}
                                     </button>
                                     <button @click="generateQwenVoice(char)"
                                         :class="['flex-1 px-2 py-1.5 border rounded text-[10px] font-bold transition-colors flex justify-center items-center gap-1', char.isGeneratingVoice ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' : 'bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-100']">
-                                        <span v-if="char.isGeneratingVoice" class="animate-spin">⏳</span>{{ char.isGeneratingVoice ? '停止生成' : 'Qwen生成音色' }}
+                                        <span v-if="char.isGeneratingVoice" class="animate-spin">⏳</span>{{
+                                        char.isGeneratingVoice ? '停止' : 'Qwen3音色' }}
+                                    </button>
+                                    <button @click="generateMossVoice(char)"
+                                        :class="['flex-1 px-2 py-1.5 border rounded text-[10px] font-bold transition-colors flex justify-center items-center gap-1', char.isGeneratingMossVoice ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100']">
+                                        <span v-if="char.isGeneratingMossVoice" class="animate-spin">⏳</span>{{
+                                        char.isGeneratingMossVoice ? '停止' : 'MOSS音色' }}
                                     </button>
                                 </div>
                             </div>
@@ -787,8 +830,8 @@
                         <h3 class="text-sm font-bold text-slate-700">2. 脚本台词列表 ({{ scriptLines.length }} 行)</h3>
                     </div>
                     <div ref="scriptListContainer" class="space-y-3 max-h-[600px] overflow-y-auto px-2 pb-10">
-                        <div v-for="(line, index) in scriptLines" :key="line.id" @click="toggleLineSelection(index, $event)"
-                            :ref="el => { if (el) lineRefs[index] = el }"
+                        <div v-for="(line, index) in scriptLines" :key="line.id"
+                            @click="toggleLineSelection(index, $event)" :ref="el => { if (el) lineRefs[index] = el }"
                             class="transition-all duration-200">
 
                             <!-- BGM 控制块 -->
@@ -931,10 +974,13 @@
                                                 </div>
                                                 <div class="w-full">
                                                     <div class="flex justify-between items-center mb-0.5">
-                                                        <span class="text-[8px] font-bold text-slate-400 uppercase">语速</span>
-                                                        <span class="text-[8px] text-slate-400 font-mono">{{ (line.speed || 1).toFixed(1) }}x</span>
+                                                        <span
+                                                            class="text-[8px] font-bold text-slate-400 uppercase">语速</span>
+                                                        <span class="text-[8px] text-slate-400 font-mono">{{ (line.speed
+                                                            || 1).toFixed(1) }}x</span>
                                                     </div>
-                                                    <input type="range" v-model.number="line.speed" min="0.5" max="2" step="0.1"
+                                                    <input type="range" v-model.number="line.speed" min="0.5" max="2"
+                                                        step="0.1"
                                                         class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-green-600 block">
                                                 </div>
                                             </div>
@@ -1025,8 +1071,8 @@
                                                             clip-rule="evenodd" />
                                                     </svg>
                                                 </button>
-                                                <button v-if="line.audioUrl" @click.stop="clearLineAudio(line)" title="清除音频"
-                                                    class="text-slate-400 hover:text-red-600 p-2">
+                                                <button v-if="line.audioUrl" @click.stop="clearLineAudio(line)"
+                                                    title="清除音频" class="text-slate-400 hover:text-red-600 p-2">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
                                                         viewBox="0 0 20 20" fill="currentColor">
                                                         <path fill-rule="evenodd"
@@ -1051,19 +1097,35 @@
                                 <!-- 音效管理条 -->
                                 <div class="flex flex-wrap items-center gap-2 w-full">
                                     <div v-for="(sfx, sIdx) in line.sfx" :key="sIdx"
-                                        class="flex items-center bg-blue-50 border border-blue-100 rounded px-2 py-1 text-xs">
-                                        <span class="mr-1"></span>
+                                        class="flex flex-wrap items-center bg-blue-50 border border-blue-100 rounded px-2 py-1.5 text-xs gap-1">
+                                        <span class="mr-0.5">🔊</span>
                                         <select v-model="sfx.name"
                                             class="bg-transparent outline-none border-b border-transparent hover:border-blue-300 text-blue-700 font-medium max-w-[100px] cursor-pointer">
                                             <option v-for="libSfx in sfxLibrary" :key="libSfx.id" :value="libSfx.name">
                                                 {{ libSfx.name }}</option>
                                         </select>
-                                        <span class="mx-1 text-slate-400">@</span>
+                                        <span class="text-slate-400">@</span>
                                         <input type="number" v-model="sfx.position" step="0.1" min="0" max="1"
                                             class="w-10 bg-transparent text-center outline-none border-b border-transparent hover:border-blue-300"
-                                            title="插入位置 (0.0 - 1.0)">
+                                            title="触发位置 (0.0 - 1.0)">
+                                        <span class="text-slate-400 ml-1">🔉</span>
+                                        <input type="range" v-model="sfx.volume" min="0" max="1" step="0.05"
+                                            class="w-14 h-3 accent-blue-500 cursor-pointer"
+                                            :title="'音量: ' + Math.round((sfx.volume ?? 0.5) * 100) + '%'">
+                                        <span class="text-[9px] text-slate-400 w-7">{{ Math.round((sfx.volume ?? 0.5) *
+                                            100) }}%</span>
+                                        <span class="text-slate-400 ml-1">✂️</span>
+                                        <input type="number" v-model="sfx.trimStart" step="0.05" min="0"
+                                            :max="sfx.trimEnd || 1"
+                                            class="w-10 bg-transparent text-center outline-none border-b border-transparent hover:border-blue-300"
+                                            title="裁剪起点 (0.0 - 1.0)">
+                                        <span class="text-slate-400">~</span>
+                                        <input type="number" v-model="sfx.trimEnd" step="0.05" :min="sfx.trimStart || 0"
+                                            max="1"
+                                            class="w-10 bg-transparent text-center outline-none border-b border-transparent hover:border-blue-300"
+                                            title="裁剪终点 (0.0 - 1.0)">
                                         <button @click="removeLineSfx(line, sIdx)"
-                                            class="ml-2 text-slate-400 hover:text-red-500 font-bold">×</button>
+                                            class="ml-1 text-slate-400 hover:text-red-500 font-bold">×</button>
                                     </div>
                                     <button @click="addLineSfx(line)"
                                         class="text-[10px] text-slate-400 hover:text-blue-600 border border-dashed border-slate-300 rounded px-2 py-1 hover:border-blue-400 transition-colors flex items-center gap-1">+
@@ -1181,12 +1243,89 @@
             </div>
         </div>
 
-        <p style="text-align: left; color: #888; font-size: 12px;">
-            <a href="https://space.bilibili.com/11354448" target="_blank"
-                style="color: inherit; text-decoration: none;">
-                本网站由sdsds222制作，点击此处访问个人主页
-            </a>
-        </p>
+        <!-- Voice Record/Upload Modal -->
+        <div v-if="isRecordModalOpen"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-xl w-[500px] max-w-full shadow-2xl">
+                <h3 class="text-lg font-bold text-slate-800 mb-4 flex justify-between items-center">
+                    为「{{ recordTargetChar?.name }}」设置参考音频
+                    <button @click="closeRecordModal"
+                        class="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
+                </h3>
+
+                <div class="mb-4">
+                    <div class="flex gap-2 mb-4">
+                        <input type="file" ref="voiceUploadRef" @change="handleUploadVoice" accept="audio/*"
+                            class="hidden">
+                        <button @click="$refs.voiceUploadRef.click()"
+                            class="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-bold transition-colors">
+                            📁 上传音频文件
+                        </button>
+                        <button v-if="recordState === 'idle'" @click="startRecording"
+                            class="flex-1 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold transition-colors flex justify-center items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-red-600"></span> 开始麦克风录音
+                        </button>
+                        <button v-else-if="recordState === 'recording'" @click="stopRecording"
+                            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold transition-colors flex justify-center items-center gap-2 animate-pulse">
+                            ⏹ 停止录音
+                        </button>
+                        <button v-else @click="startRecording"
+                            class="flex-1 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold transition-colors flex justify-center items-center gap-2">
+                            重新录制
+                        </button>
+                    </div>
+
+                    <div v-show="recordAudioBuffer" class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <p class="text-[10px] text-slate-500 mb-2 font-bold uppercase">音频修剪 (波形预览) <span
+                                v-if="recordAudioBuffer"
+                                class="ml-2 font-normal">{{recordAudioBuffer.duration.toFixed(2)}} 秒</span></p>
+                        <!-- waveform container -->
+                        <div class="relative w-full h-16 bg-slate-200 rounded overflow-hidden mb-2">
+                            <canvas ref="recordWaveformCanvas" class="w-full h-full absolute inset-0"></canvas>
+                            <!-- selection overlay -->
+                            <div class="absolute top-0 bottom-0 bg-blue-500 bg-opacity-20 border-l-2 border-r-2 border-blue-600 pointer-events-none"
+                                :style="'left:' + (recordTrimStart * 100) + '%; right:' + (100 - recordTrimEnd * 100) + '%'">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-xs text-slate-400">✂️ 裁剪比例 (0.0~1.0):</span>
+                            <div class="flex-1">
+                                <input type="range" v-model.number="recordTrimStart" step="0.01" min="0"
+                                    :max="recordTrimEnd - 0.01"
+                                    class="w-full h-1 bg-slate-300 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            <span class="text-slate-400 text-xs">-</span>
+                            <div class="flex-1">
+                                <input type="range" v-model.number="recordTrimEnd" step="0.01"
+                                    :min="recordTrimStart + 0.01" max="1"
+                                    class="w-full h-1 bg-slate-300 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button @click="playTrimmedRecord"
+                                class="px-3 py-1.5 bg-green-100 text-green-700 rounded text-xs font-bold hover:bg-green-200 flex items-center gap-1">
+                                ▶ 试听截取片段
+                            </button>
+                            <button @click="stopTrimmedRecord"
+                                class="px-3 py-1.5 bg-slate-200 text-slate-600 rounded text-xs font-bold hover:bg-slate-300">
+                                ⏹ 停止
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-6">
+                    <button @click="closeRecordModal"
+                        class="px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-lg hover:bg-slate-200 border border-slate-300">取消</button>
+                    <button @click="saveRecordAndTrim" :disabled="!recordAudioBuffer || isSavingRecord"
+                        class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                        {{ isSavingRecord ? '保存处理中...' : '确认并设为音色' }}
+                    </button>
+                </div>
+            </div>
+        </div>
 
     </div>
 
@@ -1388,6 +1527,19 @@
                 // 角色库状态
                 const characters = ref([]);
 
+                // 录音/上传参考音频状态
+                const isRecordModalOpen = ref(false);
+                const recordTargetChar = ref(null);
+                const recordState = ref('idle'); // 'idle', 'recording', 'recorded'
+                const recordAudioBuffer = ref(null);
+                const recordTrimStart = ref(0);
+                const recordTrimEnd = ref(1);
+                const isSavingRecord = ref(false);
+                const recordWaveformCanvas = ref(null);
+                let mediaRecorder = null;
+                let audioChunks = [];
+                let recordPreviewSource = null;
+
                 // 音色库状态
                 const timbres = ref([]);
                 const timbreForm = ref({ id: '', name: '', description: '', refPath: '' });
@@ -1404,6 +1556,9 @@
                 const sfxLibrary = ref([]);
                 const sfxForm = ref({ id: '', name: '', description: '', filename: '' });
                 const isEditingSfx = ref(false);
+                // AI 音效生成状态
+                const sfxGenForm = ref({ description: '', duration: 5, name: '' });
+                const isGeneratingSfx = ref(false);
 
                 // BGM库状态
                 const bgmLibrary = ref([]);
@@ -2156,6 +2311,368 @@
                 };
 
 
+                const generateMossVoice = async (char) => {
+                    if (char.isGeneratingMossVoice) {
+                        if (char.mossAbortController) char.mossAbortController.abort();
+                        return;
+                    }
+
+                    if (!currentTtsConfig.value) return alert('请先选择 TTS 服务');
+                    if (!char.voiceDescription) return alert('请先填写音色描述');
+
+                    char.isGeneratingMossVoice = true;
+                    const startTime = Date.now();
+                    const controller = new AbortController();
+                    char.mossAbortController = controller;
+
+                    const timeoutId = setTimeout(() => {
+                        if (char.mossAbortController) char.mossAbortController.abort("timeout");
+                    }, 1800000);
+
+                    try {
+                        const cfg = currentTtsConfig.value;
+                        let baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                        if (baseUrl.endsWith('/v1')) baseUrl = baseUrl.slice(0, -3);
+
+                        const template = useCustomQwenVoiceText.value ? customQwenVoiceTextTemplate.value : defaultQwenVoiceTextTemplate;
+                        const textToUse = template.replace(/\${charName}/g, char.name).replace(/\${char\.name}/g, char.name);
+
+                        const payload = {
+                            voice_description: char.voiceDescription,
+                            text: textToUse
+                        };
+
+                        // 1. 调用 MOSS VoiceGenerator 生成音频
+                        const genRes = await fetch(`${baseUrl}/v1/moss/design`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                            signal: controller.signal,
+                            cache: 'no-store'
+                        });
+
+                        if (!genRes.ok) {
+                            const err = await genRes.text();
+                            throw new Error(`生成失败: ${err}`);
+                        }
+
+                        const blob = await genRes.blob();
+                        const filename = `moss_${char.name}_${Date.now()}.wav`;
+                        const file = new File([blob], filename, { type: 'audio/wav' });
+
+                        // 2. 保存到本地资源管理
+                        localFileMap.value.set(filename, file);
+                        await saveAssetToDB(filename, file);
+
+                        // 3. 上传回 TTS 服务器 (用于 IndexTTS 调用)
+                        const formData = new FormData();
+                        formData.append('audio', file);
+                        formData.append('full_path', filename);
+
+                        const upRes = await fetch(`${baseUrl}/v1/upload_audio`, {
+                            method: 'POST',
+                            body: formData,
+                            signal: controller.signal
+                        });
+                        if (!upRes.ok) throw new Error('上传参考音频失败');
+
+                        // 4. 添加或更新音色库
+                        const timbreName = `${char.name}_MOSS`;
+                        const existingIndex = timbres.value.findIndex(t => t.name === timbreName);
+
+                        if (existingIndex !== -1) {
+                            timbres.value[existingIndex].description = char.voiceDescription;
+                            timbres.value[existingIndex].refPath = filename;
+                        } else {
+                            timbres.value.push({
+                                id: Date.now().toString(),
+                                name: timbreName,
+                                description: char.voiceDescription,
+                                refPath: filename
+                            });
+                        }
+
+                        // 5. 选中该音色
+                        char.voiceFile = filename;
+
+                        // 6. 自动保存
+                        triggerAutoSave();
+
+                    } catch (e) {
+                        console.error(e);
+                        let msg = e.message;
+                        const duration = (Date.now() - startTime) / 1000;
+
+                        if (e.name === 'AbortError') {
+                            if (controller.signal.reason === "timeout") {
+                                msg = '请求超时 (超过 30 分钟)。请检查后端是否卡死。';
+                            } else {
+                                msg = '操作已手动取消。';
+                            }
+                        } else if (msg === 'Failed to fetch') {
+                            msg = `连接异常中断 (耗时 ${Math.round(duration)}秒)。`;
+                        }
+                        alert('MOSS 生成音色失败: ' + msg);
+                    } finally {
+                        clearTimeout(timeoutId);
+                        char.isGeneratingMossVoice = false;
+                        delete char.mossAbortController;
+                    }
+                };
+
+                const generateSfxWithMoss = async () => {
+                    if (!currentTtsConfig.value) return alert('请先选择 TTS 服务');
+                    if (!sfxGenForm.value.description) return alert('请输入音效描述');
+                    if (!sfxGenForm.value.name) return alert('请输入音效名称');
+
+                    isGeneratingSfx.value = true;
+                    try {
+                        const cfg = currentTtsConfig.value;
+                        let baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                        if (baseUrl.endsWith('/v1')) baseUrl = baseUrl.slice(0, -3);
+
+                        // 1. 调用后端生成音效
+                        const res = await fetch(`${baseUrl}/v1/moss/sfx`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                ambient_sound: sfxGenForm.value.description,
+                                duration_seconds: sfxGenForm.value.duration
+                            })
+                        });
+                        if (!res.ok) throw new Error(await res.text());
+
+                        // 2. 保存到本地
+                        const blob = await res.blob();
+                        const filename = `moss_sfx_${sfxGenForm.value.name}_${Date.now()}.wav`;
+                        const file = new File([blob], filename, { type: 'audio/wav' });
+                        localFileMap.value.set(filename, file);
+                        await saveAssetToDB(filename, file);
+
+                        // 3. 自动添加到音效库
+                        sfxLibrary.value.push({
+                            id: Date.now().toString(),
+                            name: sfxGenForm.value.name,
+                            description: sfxGenForm.value.description,
+                            filename: filename,
+                            enabled: true
+                        });
+
+                        // 4. 预加载 AudioBuffer
+                        loadAudioBuffer(filename);
+                        triggerAutoSave();
+                        alert('音效生成成功！已添加到音效库。');
+                        sfxGenForm.value = { description: '', duration: 5, name: '' };
+                    } catch (e) {
+                        alert('音效生成失败: ' + e.message);
+                    } finally {
+                        isGeneratingSfx.value = false;
+                    }
+                };
+
+                // --- 录音与上传参考音频逻辑 ---
+                const openVoiceRecordModal = (char) => {
+                    recordTargetChar.value = char;
+                    isRecordModalOpen.value = true;
+                    recordState.value = 'idle';
+                    recordAudioBuffer.value = null;
+                    recordTrimStart.value = 0;
+                    recordTrimEnd.value = 1;
+                    stopTrimmedRecord();
+                };
+
+                const closeRecordModal = () => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                    stopTrimmedRecord();
+                    isRecordModalOpen.value = false;
+                    recordTargetChar.value = null;
+                    recordAudioBuffer.value = null;
+                };
+
+                const handleUploadVoice = async (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const decodedData = await audioContext.decodeAudioData(arrayBuffer);
+                        recordAudioBuffer.value = decodedData;
+                        recordState.value = 'recorded';
+                        recordTrimStart.value = 0;
+                        recordTrimEnd.value = 1;
+                        setTimeout(drawRecordWaveform, 50);
+                    } catch (err) {
+                        alert('读取音频文件失败: ' + err.message);
+                    }
+                    event.target.value = '';
+                };
+
+                const startRecording = async () => {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream);
+                        audioChunks = [];
+
+                        mediaRecorder.ondataavailable = (event) => {
+                            if (event.data.size > 0) audioChunks.push(event.data);
+                        };
+
+                        mediaRecorder.onstop = async () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            stream.getTracks().forEach(track => track.stop());
+                            try {
+                                const arrayBuffer = await audioBlob.arrayBuffer();
+                                const decodedData = await audioContext.decodeAudioData(arrayBuffer);
+                                recordAudioBuffer.value = decodedData;
+                                recordState.value = 'recorded';
+                                recordTrimStart.value = 0;
+                                recordTrimEnd.value = 1;
+                                setTimeout(drawRecordWaveform, 50);
+                            } catch (e) {
+                                alert("录音处理失败");
+                            }
+                        };
+
+                        mediaRecorder.start();
+                        recordState.value = 'recording';
+                        recordAudioBuffer.value = null;
+                    } catch (err) {
+                        alert('无法访问麦克风: ' + err.message);
+                    }
+                };
+
+                const stopRecording = () => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                };
+
+                const drawRecordWaveform = () => {
+                    const canvas = recordWaveformCanvas.value;
+                    if (!canvas || !recordAudioBuffer.value) return;
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    const channelData = recordAudioBuffer.value.getChannelData(0);
+                    const step = Math.ceil(channelData.length / canvas.width);
+                    const amp = canvas.height / 2;
+
+                    ctx.fillStyle = '#64748b'; // slate-500
+                    ctx.beginPath();
+                    for (let i = 0; i < canvas.width; i++) {
+                        let min = 1.0;
+                        let max = -1.0;
+                        for (let j = 0; j < step; j++) {
+                            const datum = channelData[i * step + j];
+                            if (datum < min) min = datum;
+                            if (datum > max) max = datum;
+                        }
+                        ctx.rect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp));
+                    }
+                    ctx.fill();
+                };
+
+                const playTrimmedRecord = () => {
+                    stopTrimmedRecord();
+                    if (!recordAudioBuffer.value) return;
+
+                    recordPreviewSource = audioContext.createBufferSource();
+                    recordPreviewSource.buffer = recordAudioBuffer.value;
+                    recordPreviewSource.connect(audioContext.destination);
+
+                    const duration = recordAudioBuffer.value.duration;
+                    const startOffset = duration * recordTrimStart.value;
+                    const playDuration = duration * (recordTrimEnd.value - recordTrimStart.value);
+
+                    recordPreviewSource.start(0, startOffset, playDuration);
+                };
+
+                const stopTrimmedRecord = () => {
+                    if (recordPreviewSource) {
+                        try { recordPreviewSource.stop(); } catch (e) { }
+                        recordPreviewSource = null;
+                    }
+                };
+
+                const saveRecordAndTrim = async () => {
+                    if (!currentTtsConfig.value) return alert('请先选择 TTS 服务以供上传引用');
+                    if (!recordAudioBuffer.value) return;
+
+                    isSavingRecord.value = true;
+                    try {
+                        const originalBuffer = recordAudioBuffer.value;
+                        const duration = originalBuffer.duration;
+                        const startOffset = duration * recordTrimStart.value;
+                        const playDuration = duration * (recordTrimEnd.value - recordTrimStart.value);
+
+                        // 1. Slice audio using OfflineAudioContext
+                        const offlineCtx = new OfflineAudioContext(
+                            originalBuffer.numberOfChannels,
+                            Math.ceil(playDuration * originalBuffer.sampleRate),
+                            originalBuffer.sampleRate
+                        );
+
+                        const source = offlineCtx.createBufferSource();
+                        source.buffer = originalBuffer;
+                        source.connect(offlineCtx.destination);
+                        source.start(0, startOffset, playDuration);
+
+                        const renderedBuffer = await offlineCtx.startRendering();
+
+                        // 2. Convert to Blob
+                        const wavBlob = bufferToWave(renderedBuffer, renderedBuffer.length);
+                        const filename = `custom_${recordTargetChar.value.name}_${Date.now()}.wav`;
+                        const file = new File([wavBlob], filename, { type: 'audio/wav' });
+
+                        // 3. Save to Local
+                        localFileMap.value.set(filename, file);
+                        await saveAssetToDB(filename, file);
+
+                        // 4. Upload to API
+                        const cfg = currentTtsConfig.value;
+                        let baseUrl = cfg.baseUrl.trim().replace(/\/+$/, '');
+                        if (baseUrl.endsWith('/v1')) baseUrl = baseUrl.slice(0, -3);
+
+                        const formData = new FormData();
+                        formData.append('audio', file);
+                        formData.append('full_path', filename);
+
+                        const upRes = await fetch(`${baseUrl}/v1/upload_audio`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        if (!upRes.ok) throw new Error('上传录音音频失败');
+
+                        // 5. Update Timbre Library and Character
+                        const timbreName = `${recordTargetChar.value.name}_自选录音`;
+                        const existingIndex = timbres.value.findIndex(t => t.name === timbreName);
+
+                        if (existingIndex !== -1) {
+                            timbres.value[existingIndex].refPath = filename;
+                            timbres.value[existingIndex].description = '用户上传或录音的音色';
+                        } else {
+                            timbres.value.push({
+                                id: Date.now().toString(),
+                                name: timbreName,
+                                description: '用户上传或录音的音色',
+                                refPath: filename
+                            });
+                        }
+
+                        recordTargetChar.value.voiceFile = filename;
+                        triggerAutoSave();
+                        closeRecordModal();
+                        alert('已成功设置为角色参考音频！');
+
+                    } catch (e) {
+                        alert('保存失败: ' + e.message);
+                        console.error(e);
+                    } finally {
+                        isSavingRecord.value = false;
+                    }
+                };
+
                 const handleTimbreFileUpload = (event) => {
                     const file = event.target.files[0];
                     if (file) {
@@ -2654,185 +3171,185 @@
                     }
                 };
 
-                                let batchAbortController = null;
+                let batchAbortController = null;
 
-                                const generateAllLines = async () => {
+                const generateAllLines = async () => {
 
-                                    if (isGeneratingAll.value) {
+                    if (isGeneratingAll.value) {
 
-                                        if (batchAbortController) {
+                        if (batchAbortController) {
 
-                                            batchAbortController.abort();
+                            batchAbortController.abort();
 
-                                        }
+                        }
 
-                                        return;
+                        return;
+
+                    }
+
+
+
+                    const startIndex = selectedLineIndex.value !== -1 ? selectedLineIndex.value : 0;
+
+                    const linesToCheck = scriptLines.value.slice(startIndex);
+
+
+
+                    // Pre-flight check on lines that will be processed
+
+                    const linesToProcess = linesToCheck.filter(l => l.type === 'dialogue' && !l.audioUrl);
+
+                    for (const line of linesToProcess) {
+
+                        const char = characters.value.find(c => c.name === line.role);
+
+                        if (!char || !char.voiceFile) {
+
+                            const lineIndex = scriptLines.value.findIndex(l => l.id === line.id);
+
+                            alert(`一键生成已终止。\n\n原因：第 ${lineIndex + 1} 行台词的角色（${line.role}）没有绑定音源。`);
+
+                            return;
+
+                        }
+
+                    }
+
+
+
+                    const dialogueCount = linesToProcess.length;
+
+                    if (dialogueCount === 0) {
+
+                        alert('没有需要生成的台词音频。');
+
+                        return;
+
+                    }
+
+
+
+                    const confirmMsg = startIndex > 0
+
+                        ? `即将从第 ${startIndex + 1} 行（选中行）开始，为后续 ${dialogueCount} 条【未生成】的台词生成音频。确定继续吗？`
+
+                        : `即将为全部 ${dialogueCount} 条【未生成】的台词生成音频。确定继续吗？`;
+
+
+
+                    if (!confirm(confirmMsg)) return;
+
+
+
+                    isGeneratingAll.value = true;
+
+                    batchAbortController = new AbortController();
+
+                    const batchSignal = batchAbortController.signal;
+
+                    let failedCount = 0;
+
+
+
+                    try {
+
+                        // Iterate through the original slice to maintain order, but only process what's needed.
+
+                        for (const line of linesToCheck) {
+
+                            if (batchSignal.aborted) break;
+
+
+
+                            if (line.type === 'dialogue' && !line.audioUrl) {
+
+                                try {
+
+                                    await generateLineAudio(line, batchSignal);
+
+                                } catch (e) {
+
+                                    if (e.name !== 'AbortError') {
+
+                                        console.error(`Error generating line for role ${line.role}:`, e);
+
+                                        failedCount++;
 
                                     }
 
-                
+                                }
 
-                                    const startIndex = selectedLineIndex.value !== -1 ? selectedLineIndex.value : 0;
+                            }
 
-                                    const linesToCheck = scriptLines.value.slice(startIndex);
+                        }
 
-                
 
-                                    // Pre-flight check on lines that will be processed
 
-                                    const linesToProcess = linesToCheck.filter(l => l.type === 'dialogue' && !l.audioUrl);
+                        if (batchSignal.aborted) {
 
-                                    for (const line of linesToProcess) {
+                            alert('批量生成已停止。');
 
-                                        const char = characters.value.find(c => c.name === line.role);
+                        } else if (failedCount > 0) {
 
-                                        if (!char || !char.voiceFile) {
+                            alert(`一键生成完成，但有 ${failedCount} 条台词生成失败。请检查控制台或单独重新生成失败的台词。`);
 
-                                            const lineIndex = scriptLines.value.findIndex(l => l.id === line.id);
+                        } else {
 
-                                            alert(`一键生成已终止。\n\n原因：第 ${lineIndex + 1} 行台词的角色（${line.role}）没有绑定音源。`);
+                            await saveProjectToDB();
 
-                                            return;
+                            alert('批量生成完成！');
 
-                                        }
+                        }
 
-                                    }
+                    } catch (e) {
 
-                
+                        console.error("生成全部音频时发生意外错误:", e);
 
-                                    const dialogueCount = linesToProcess.length;
+                        alert('生成过程中出现未知错误，详情请查看控制台。');
 
-                                    if (dialogueCount === 0) {
+                    } finally {
 
-                                        alert('没有需要生成的台词音频。');
+                        isGeneratingAll.value = false;
 
-                                        return;
+                        batchAbortController = null;
 
-                                    }
+                    }
 
-                
+                };
 
-                                    const confirmMsg = startIndex > 0
 
-                                        ? `即将从第 ${startIndex + 1} 行（选中行）开始，为后续 ${dialogueCount} 条【未生成】的台词生成音频。确定继续吗？`
 
-                                        : `即将为全部 ${dialogueCount} 条【未生成】的台词生成音频。确定继续吗？`;
+                const clearAllGeneratedAudio = async () => {
 
-                
+                    const linesWithAudio = scriptLines.value.filter(l => l.audioUrl);
 
-                                    if (!confirm(confirmMsg)) return;
+                    if (linesWithAudio.length === 0) {
 
-                
+                        return alert('没有已生成的音频可以清除。');
 
-                                    isGeneratingAll.value = true;
+                    }
 
-                                    batchAbortController = new AbortController();
+                    if (!confirm(`确定要清除所有 ${linesWithAudio.length} 条已生成的音频吗？此操作不可撤销。`)) {
 
-                                    const batchSignal = batchAbortController.signal;
+                        return;
 
-                                    let failedCount = 0;
+                    }
 
-                
 
-                                    try {
 
-                                        // Iterate through the original slice to maintain order, but only process what's needed.
+                    for (const line of linesWithAudio) {
 
-                                        for (const line of linesToCheck) {
+                        // Don't wait for each one, do them in parallel
 
-                                            if (batchSignal.aborted) break;
+                        clearLineAudio(line);
 
-                
+                    }
 
-                                            if (line.type === 'dialogue' && !line.audioUrl) {
 
-                                                try {
 
-                                                    await generateLineAudio(line, batchSignal);
+                    alert('所有已生成的音频已被清除。');
 
-                                                } catch (e) {
-
-                                                    if (e.name !== 'AbortError') {
-
-                                                        console.error(`Error generating line for role ${line.role}:`, e);
-
-                                                        failedCount++;
-
-                                                    }
-
-                                                }
-
-                                            }
-
-                                        }
-
-                
-
-                                        if (batchSignal.aborted) {
-
-                                            alert('批量生成已停止。');
-
-                                        } else if (failedCount > 0) {
-
-                                            alert(`一键生成完成，但有 ${failedCount} 条台词生成失败。请检查控制台或单独重新生成失败的台词。`);
-
-                                        } else {
-
-                                            await saveProjectToDB();
-
-                                            alert('批量生成完成！');
-
-                                        }
-
-                                    } catch (e) {
-
-                                        console.error("生成全部音频时发生意外错误:", e);
-
-                                        alert('生成过程中出现未知错误，详情请查看控制台。');
-
-                                    } finally {
-
-                                        isGeneratingAll.value = false;
-
-                                        batchAbortController = null;
-
-                                    }
-
-                                };
-
-                
-
-                                const clearAllGeneratedAudio = async () => {
-
-                                    const linesWithAudio = scriptLines.value.filter(l => l.audioUrl);
-
-                                    if (linesWithAudio.length === 0) {
-
-                                        return alert('没有已生成的音频可以清除。');
-
-                                    }
-
-                                    if (!confirm(`确定要清除所有 ${linesWithAudio.length} 条已生成的音频吗？此操作不可撤销。`)) {
-
-                                        return;
-
-                                    }
-
-                
-
-                                    for (const line of linesWithAudio) {
-
-                                        // Don't wait for each one, do them in parallel
-
-                                        clearLineAudio(line);
-
-                                    }
-
-                
-
-                                    alert('所有已生成的音频已被清除。');
-
-                                };
+                };
 
                 const playLineAudio = (line, stopPreviousSfx = true) => {
                     return new Promise(async (resolve, reject) => {
@@ -2952,11 +3469,19 @@
                                     const sSrc = audioContext.createBufferSource();
                                     sSrc.buffer = buffer;
                                     const sGain = audioContext.createGain();
-                                    sGain.gain.setValueAtTime(line.sfxVolume ?? 0.5, now);
+                                    // 使用每个音效独立的音量，回退到台词级别 sfxVolume
+                                    const sfxVol = item.volume !== undefined ? parseFloat(item.volume) : (line.sfxVolume ?? 0.5);
+                                    sGain.gain.setValueAtTime(sfxVol, now);
                                     sSrc.connect(sGain).connect(audioContext.destination);
 
+                                    // 音效自身的裁剪参数
+                                    const sfxTrimStart = parseFloat(item.trimStart) || 0;
+                                    const sfxTrimEnd = parseFloat(item.trimEnd) || 1;
+                                    const sfxOffset = buffer.duration * sfxTrimStart;
+                                    const sfxPlayDuration = buffer.duration * (sfxTrimEnd - sfxTrimStart);
+
                                     const relativeStart = absSfxTime - absStart;
-                                    sSrc.start(now + relativeStart / speed);
+                                    sSrc.start(now + relativeStart / speed, sfxOffset, sfxPlayDuration);
 
                                     sfxSources.push(sSrc);
                                     sSrc.onended = () => {
@@ -3309,7 +3834,7 @@
                                             // 优化：收集到批量列表
                                             assetsToSave.push({ key: `line_audio_${line.id}`, blob: blob });
 
-                                    if (line.speed === undefined) line.speed = 1.0; // Ensure speed exists for old saves
+                                            if (line.speed === undefined) line.speed = 1.0; // Ensure speed exists for old saves
                                             line.audioUrl = URL.createObjectURL(blob);
                                             delete line.audioBase64; // 清理内存
                                         } catch (err) { console.warn('Audio restore failed', err); }
@@ -3573,11 +4098,19 @@
                                             const sSrc = offlineCtx.createBufferSource();
                                             sSrc.buffer = sBuffer;
                                             const sGain = offlineCtx.createGain();
-                                            sGain.gain.value = evt.line.sfxVolume ?? 0.5;
+                                            // 使用每个音效独立的音量
+                                            const sfxVol = s.volume !== undefined ? parseFloat(s.volume) : (evt.line.sfxVolume ?? 0.5);
+                                            sGain.gain.value = sfxVol;
                                             sSrc.connect(sGain).connect(offlineCtx.destination);
 
+                                            // 音效自身的裁剪参数
+                                            const sfxTrimStart = parseFloat(s.trimStart) || 0;
+                                            const sfxTrimEnd = parseFloat(s.trimEnd) || 1;
+                                            const sfxOffset = sBuffer.duration * sfxTrimStart;
+                                            const sfxPlayDuration = sBuffer.duration * (sfxTrimEnd - sfxTrimStart);
+
                                             const relativeStart = absSfxTime - absStart;
-                                            sSrc.start(evt.time + relativeStart / evt.speed);
+                                            sSrc.start(evt.time + relativeStart / evt.speed, sfxOffset, sfxPlayDuration);
                                         }
                                     }
                                 });
@@ -3882,7 +4415,7 @@
                 const addLineSfx = (line) => {
                     if (!line.sfx) line.sfx = [];
                     const defaultSfx = sfxLibrary.value.length > 0 ? sfxLibrary.value[0].name : 'New SFX';
-                    line.sfx.push({ name: defaultSfx, position: 0.5 });
+                    line.sfx.push({ name: defaultSfx, position: 0.5, volume: 0.5, trimStart: 0, trimEnd: 1 });
                 };
 
                 const removeLineSfx = (line, index) => {
@@ -4001,7 +4534,7 @@
 
                             // The offset of the child relative to the container's top edge
                             const childOffsetTop = childRect.top - containerRect.top;
-                            
+
                             // The desired scrollTop to center the child
                             const newScrollTop = container.scrollTop + childOffsetTop - (container.clientHeight / 2) + (child.clientHeight / 2);
 
@@ -4545,7 +5078,10 @@
 
                     // Character Actions (New)
                     characters, addCharacter, deleteCharacter,
-                    analyzeCharacterVoice, generateQwenVoice,
+                    analyzeCharacterVoice, generateQwenVoice, generateMossVoice,
+                    isRecordModalOpen, recordTargetChar, recordState, recordAudioBuffer, recordTrimStart, recordTrimEnd,
+                    isSavingRecord, openVoiceRecordModal, closeRecordModal, handleUploadVoice, startRecording, stopRecording,
+                    playTrimmedRecord, stopTrimmedRecord, saveRecordAndTrim, recordWaveformCanvas, drawRecordWaveform,
 
                     // Timbre Actions
                     timbres, timbreForm, isEditingTimbre, selectedTimbreId,
@@ -4560,6 +5096,7 @@
                     sfxLibrary, sfxForm, isEditingSfx,
                     saveSfx, editSfx, deleteSfx, resetSfxForm, handleSfxFileUpload,
                     addLineSfx, removeLineSfx,
+                    sfxGenForm, isGeneratingSfx, generateSfxWithMoss,
 
                     // BGM Actions
                     bgmLibrary, bgmForm, isEditingBgm,

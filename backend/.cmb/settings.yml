@@ -1,0 +1,7 @@
+workspace:
+  launch:
+    button:
+      name: 启动 index-tts
+      description:  一键启动index-tts
+    disabled: false
+    autoOpenWebIDE: true

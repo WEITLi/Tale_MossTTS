@@ -1,0 +1,22 @@
+# .cnb.yml
+$:
+  vscode:
+    - docker:
+        # 用 PyTorch 官方 GPU 镜像作为开发环境
+        image: docker.cnb.cool/conystudio/indextts2-qwen3voicedesign:latest
+
+      runner:
+        # 指定需要 GPU 的 runner
+        tags: cnb:arch:amd64:gpu
+
+      services:
+        - vscode
+        - docker
+      env:
+        # 声明首次打开终端时自动执行的命令，支持多行文本
+        CNB_WELCOME_CMD: |
+          echo "hello workd"
+          bash start.sh
+      stages:
+        - name: start
+          script: echo 'start'
